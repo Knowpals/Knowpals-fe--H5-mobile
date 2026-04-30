@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>知伴AI</title>
+  <style>
+    :root {
+      --status-bar-height: 44px;
+      --navigation-bar-height: 44px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      background-color: #f5f7fa;
+    }
+
+    .container {
+      min-height: 100vh;
+      background-color: #f5f7fa;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 70px;
+    }
+
+    /* 顶部导航栏 */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      z-index: 500;
+    }
+
+    .status-bar {
+      height: var(--status-bar-height);
+      width: 100%;
+    }
+
+    .navigation-bar {
+      height: var(--navigation-bar-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .nav-right {
+      position: absolute;
+      right: 15px;
+      font-size: 14px;
+      color: #7B68EE;
+      cursor: pointer;
+    }
+
+    /* 内容区域 */
+    .content {
+      flex: 1;
+      padding: calc(var(--status-bar-height) + var(--navigation-bar-height) + 20px) 15px 20px;
+    }
+
+    /* ==================== 登录前的未登录状态 ==================== */
+    .before-login-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+    }
+
+    .illustration {
+      margin-bottom: 40px;
+    }
+
+    .illustration-img {
+      width: 240px;
+      height: 280px;
+      object-fit: contain;
+    }
+
+    .tips {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .tips-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .tips-desc {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      line-height: 1.6;
+      padding: 0 30px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      max-width: 260px;
+      height: 44px;
+      line-height: 44px;
+      border-radius: 22px;
+      background: linear-gradient(90deg, #9D7AFE, #7B68EE);
+      color: #fff;
+      font-size: 15px;
+      border: none;
+      box-shadow: 0 4px 15px rgba(123, 104, 238, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 12px;
+    }
+
+    .primary-btn:active {
+      opacity: 0.9;
+    }
+
+    .primary-btn.secondary {
+      background: transparent;
+      color: #7B68EE;
+      box-shadow: none;
+      border: 1px solid #7B68EE;
+    }
+
+    /* ==================== 已登录有班级状态 ==================== */
+    .has-class-content {
+      width: 100%;
+    }
+
+    /* 顶部问候卡片 */
+    .greeting-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      padding: 20px;
+      color: #fff;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .greeting-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .greeting-text {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .greeting-date {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .stat-box {
+      text-align: center;
+      flex: 1;
+    }
+
+    .stat-num {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    /* 快速入口网格 */
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .quick-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .quick-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .quick-icon.purple { background: #f3e8ff; }
+    .quick-icon.orange { background: #fff3e0; }
+    .quick-icon.blue { background: #e0f2fe; }
+    .quick-icon.green { background: #dcfce7; }
+
+    .quick-text {
+      font-size: 11px;
+      color: #333;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+
+    .empty-text {
+      font-size: 14px;
+      color: #999;
+    }
+
+    /* ==================== 底部导航栏 ==================== */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid #e5e5e5;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+      z-index: 200;
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #999999;
+      font-size: 11px;
+      text-decoration: none;
+      padding: 4px 20px;
+    }
+
+    .tab-item.active {
+      color: #7B68EE;
+    }
+
+    .tab-icon {
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+
+    /* 隐藏状态 */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+      <div class="status-bar"></div>
+      <div class="navigation-bar">
+        <span class="nav-title">知伴AI</span>
+        <span class="nav-right" id="navRight">登录</span>
+      </div>
+    </div>
+
+    <!-- ==================== 未登录状态 ==================== -->
+    <div class="content before-login-content hidden" id="beforeLoginContent">
+      <div class="illustration">
+        <img src="images/class-empty.png" alt="" class="illustration-img">
+      </div>
+      <div class="tips">
+        <span class="tips-title">登录后开始学习</span>
+        <span class="tips-desc">登录知伴AI，开启您的个性化学习之旅</span>
+      </div>
+      <a href="pages/login.html" class="primary-btn">立即登录</a>
+      <a href="pages/register.html" class="primary-btn secondary">注册账号</a>
+    </div>
+
+    <!-- ==================== 已登录有班级 - 显示个人学习数据 ==================== -->
+    <div class="content has-class-content hidden" id="hasClassContent">
+      <!-- 顶部问候卡片 -->
+      <div class="greeting-card">
+        <div class="greeting-header">
+          <span class="greeting-text" id="greeting">下午好，同学</span>
+          <span class="greeting-date" id="currentDate"></span>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-num" id="statPending">--</div>
+            <div class="stat-label">待完成任务</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="statCompleted">--</div>
+            <div class="stat-label">已完成</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="statStudyTime">--</div>
+            <div class="stat-label">学习时长</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 快速入口 -->
+      <div class="quick-grid">
+        <a href="pages/class-detail.html" class="quick-item">
+          <div class="quick-icon purple">📚</div>
+          <span class="quick-text">我的班级</span>
+        </a>
+        <a href="pages/pending-tasks.html" class="quick-item">
+          <div class="quick-icon orange">📋</div>
+          <span class="quick-text">未完成任务</span>
+        </a>
+        <a href="pages/settings.html" class="quick-item">
+          <div class="quick-icon blue">⚙️</div>
+          <span class="quick-text">设置</span>
+        </a>
+        <a href="pages/join-class.html" class="quick-item">
+          <div class="quick-icon green">➕</div>
+          <span class="quick-text">加入班级</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="tab-bar">
+      <a href="index.html" class="tab-item active">
+        <span class="tab-icon">🏠</span>
+        <span>首页</span>
+      </a>
+      <a href="pages/class-detail.html" class="tab-item">
+        <span class="tab-icon">📚</span>
+        <span>学习</span>
+      </a>
+      <a href="pages/me.html" class="tab-item">
+        <span class="tab-icon">👤</span>
+        <span>我的</span>
+      </a>
+    </div>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script>
+    // ========== 全局配置 ==========
+    const API_BASE = 'https://knowpals.xyz';
+
+    // ========== 状态 ==========
+    const state = {
+      isLoggedIn: false,
+      userInfo: null,
+      hasClass: false,
+      classes: [],
+      pendingCount: 0,
+      completedCount: 0,
+      studyTime: 0  // 分钟
+    };
+
+    // ========== 工具函数 ==========
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    function getUserInfo() {
+      const userInfoStr = localStorage.getItem('userInfo');
+      if (userInfoStr) {
+        try {
+          return JSON.parse(userInfoStr);
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    function formatDate() {
+      const now = new Date();
+      const hours = now.getHours();
+      let greeting = '晚上好';
+      if (hours >= 6 && hours < 12) greeting = '早上好';
+      else if (hours >= 12 && hours < 14) greeting = '中午好';
+      else if (hours >= 14 && hours < 18) greeting = '下午好';
+      
+      const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`;
+      return { greeting, dateStr };
+    }
+
+    // ========== API 请求 ==========
+    async function fetchWithAuth(url, options = {}) {
+      const token = getToken();
+      if (!token) {
+        // 没有 token，跳转到登录页
+        window.location.href = 'pages/login.html';
+        return null;
+      }
+      
+      const res = await fetch(API_BASE + url, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+      
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        alert('登录已过期，请重新登录');
+        window.location.href = 'pages/login.html';
+        return null;
+      }
+      
+      return res.json();
+    }
+
+    // ========== 加载数据 ==========
+    async function loadData() {
+      // 更新问候语
+      const { greeting, dateStr } = formatDate();
+      const userInfo = getUserInfo();
+      const nickname = userInfo?.nickname || userInfo?.name || userInfo?.username || '同学';
+      document.getElementById('greeting').textContent = `${greeting}，${nickname}`;
+      document.getElementById('currentDate').textContent = dateStr;
+
+      // 加载班级数据
+      await loadClasses();
+
+      // 加载统计数据
+      await loadStats();
+    }
+
+    async function loadClasses() {
+      try {
+        const res = await fetchWithAuth('/api/v1/class/my-joined');
+        console.log('>>> 班级列表:', res);
+
+        if (res && (res.code === 0 || res.code === 200) && res.data && res.data.class_list) {
+          state.classes = res.data.class_list.map(c => ({
+            id: c.class_id,
+            name: c.class_name,
+            teacherName: c.teacher_name
+          }));
+          state.hasClass = state.classes.length > 0;
+        } else {
+          state.classes = [];
+          state.hasClass = false;
+        }
+
+        // 统计待完成任务
+        await loadPendingTasks();
+      } catch (err) {
+        console.error('>>> 加载班级失败:', err);
+        state.classes = [];
+        state.hasClass = false;
+        updatePendingCount(0);
+        updateCompletedCount(0);
+      }
+    }
+
+    async function loadPendingTasks() {
+      let totalPending = 0;
+      let totalCompleted = 0;
+
+      if (state.classes.length === 0) {
+        state.pendingCount = 0;
+        state.completedCount = 0;
+        updateStats(0, 0);
+        return;
+      }
+
+      // 为每个班级查询待预习数量
+      const promises = state.classes.map(c => 
+        fetchWithAuth(`/api/v1/behavior/class-progress/${c.id}/todo`).then(res => {
+          if (res && res.data && res.data.progress_list) {
+            const list = res.data.progress_list;
+            const pending = list.filter(item => (item.progress_percent || 0) < 100).length;
+            const completed = list.filter(item => (item.progress_percent || 0) >= 100).length;
+            return { pending, completed };
+          }
+          return { pending: 0, completed: 0 };
+        }).catch(() => ({ pending: 0, completed: 0 }))
+      );
+
+      const results = await Promise.all(promises);
+      results.forEach(r => {
+        totalPending += r.pending;
+        totalCompleted += r.completed;
+      });
+
+      state.pendingCount = totalPending;
+      state.completedCount = totalCompleted;
+      updateStats(totalPending, totalCompleted);
+    }
+
+    async function loadStats() {
+      // 从接口获取学习时长等统计数据
+      try {
+        const res = await fetchWithAuth('/api/v1/stat/student/overview');
+        if (res && (res.code === 0 || res.code === 200) && res.data) {
+          const data = res.data;
+          // 转换观看时长（秒转为分钟）
+          const totalMinutes = Math.floor((data.total_watch_time_sec || 0) / 60);
+          state.studyTime = totalMinutes;
+          
+          // 更新学习时长显示
+          const hours = Math.floor(totalMinutes / 60);
+          const mins = totalMinutes % 60;
+          let displayTime = '--';
+          if (totalMinutes > 0) {
+            displayTime = hours > 0 ? `${hours}h${mins > 0 ? mins + 'm' : ''}` : `${mins}m`;
+          }
+          document.getElementById('statStudyTime').textContent = displayTime;
+        }
+      } catch (err) {
+        console.error('>>> 获取学习统计数据失败:', err);
+        document.getElementById('statStudyTime').textContent = '--';
+      }
+    }
+
+    function updateStats(pending, completed) {
+      document.getElementById('statPending').textContent = pending;
+      document.getElementById('statCompleted').textContent = completed;
+    }
+
+    // ========== 初始化 ==========
+    function init() {
+      // 检查登录状态
+      if (!getToken()) {
+        // 未登录
+        document.getElementById('beforeLoginContent').classList.remove('hidden');
+        document.getElementById('navRight').textContent = '登录';
+        document.getElementById('navRight').onclick = () => {
+          window.location.href = 'pages/login.html';
+        };
+        return;
+      }
+
+      // 已登录
+      const userInfo = getUserInfo();
+      if (userInfo) {
+        state.userInfo = userInfo;
+      }
+
+      document.getElementById('navRight').textContent = '设置';
+      document.getElementById('navRight').onclick = () => {
+        window.location.href = 'pages/settings.html';
+      };
+
+      // 显示已登录内容
+      document.getElementById('hasClassContent').classList.remove('hidden');
+      
+      // 加载数据
+      loadData();
+    }
+
+    // 页面显示时刷新
+    window.addEventListener('pageshow', () => {
+      init();
+    });
+
+    // 启动
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>加入班级</title>
+  <style>
+    /* 与原小程序app.json一致的顶部导航栏样式 */
+    :root {
+      --status-bar-height: 44px;
+      --navigation-bar-height: 44px;
+      --navigation-bar-bg: #ffffff;
+      --navigation-bar-text: black;
+      --navigation-bar-title: 知伴AI;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      background-color: #f9f9f9;
+    }
+
+    .container {
+      min-height: 100vh;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部导航栏 - 与原小程序一致 */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--navigation-bar-bg);
+      z-index: 500;
+    }
+
+    .status-bar {
+      height: var(--status-bar-height);
+      width: 100%;
+    }
+
+    .navigation-bar {
+      height: var(--navigation-bar-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .nav-back {
+      position: absolute;
+      left: 15px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .content {
+      flex: 1;
+      padding: calc(var(--status-bar-height) + var(--navigation-bar-height) + 30px) 25px 30px;
+      box-sizing: border-box;
+    }
+
+    .illustration {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .illustration-img {
+      width: 175px;
+      height: 200px;
+      object-fit: contain;
+    }
+
+    .description {
+      font-size: 17px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      padding: 0 5px;
+      width: 80%;
+      text-align: center;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .form-item {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .label {
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 15px;
+      display: block;
+      width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .input {
+      font-size: 18px;
+      height: 50px;
+      line-height: 50px;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      padding: 0 15px;
+      color: #333;
+      width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+      background: #fff;
+    }
+
+    .input::placeholder {
+      color: #ccc;
+      font-size: 18px;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 50px;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .btn {
+      flex: 1;
+      height: 45px;
+      line-height: 45px;
+      border-radius: 22px;
+      font-size: 18px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn.cancel {
+      background-color: #f0f0f0;
+      color: #666;
+      margin-right: 15px;
+    }
+
+    .btn.cancel:active {
+      background-color: #e0e0e0;
+    }
+
+    .btn.confirm {
+      background: linear-gradient(90deg, #9D7AFE, #7B68EE);
+      color: #fff;
+    }
+
+    .btn.confirm:disabled {
+      background: #ccc;
+      color: #999;
+    }
+
+    .btn.confirm:active:not(:disabled) {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部导航栏 - 与原小程序一致 -->
+    <div class="top-nav">
+      <div class="status-bar"></div>
+      <div class="navigation-bar">
+        <span class="nav-back" id="navBack">‹</span>
+        <span class="nav-title">加入班级</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- 插图区域 -->
+      <div class="illustration">
+        <img src="../images/class-empty.png" alt="" class="illustration-img">
+      </div>
+
+      <!-- 说明文字 -->
+      <div class="description">
+        请输入老师提供的班级号，即可加入对应学科班级，查看预习任务
+      </div>
+
+      <!-- 表单 -->
+      <form id="joinForm">
+        <!-- 班级号输入 -->
+        <div class="form-item">
+          <label class="label">班级号</label>
+          <input 
+            class="input" 
+            name="classCode" 
+            id="classCodeInput"
+            placeholder="请输入8位班级号" 
+            maxlength="8"
+            type="number"
+          />
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="button-group">
+          <button type="button" class="btn cancel" id="cancelBtn">取消</button>
+          <button type="submit" class="btn confirm" id="confirmBtn" disabled>确定</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+    // pages/join-class/join-class.js
+    const state = {
+      classCode: '',
+      formValid: false
+    };
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 返回按钮
+      document.getElementById('navBack').addEventListener('click', function() {
+        window.history.back();
+      });
+
+      // 输入监听
+      document.getElementById('classCodeInput').addEventListener('input', function(e) {
+        state.classCode = e.target.value;
+        state.formValid = state.classCode.length === 8;
+        document.getElementById('confirmBtn').disabled = !state.formValid;
+      });
+
+      // 取消按钮
+      document.getElementById('cancelBtn').addEventListener('click', function() {
+        window.history.back();
+      });
+
+      // 表单提交
+      document.getElementById('joinForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!state.formValid) return;
+
+        showLoading('加入中...');
+
+        API.class.join({
+          invite_code: state.classCode
+        }).then(res => {
+          hideLoading();
+          console.log('加入班级响应:', res);
+
+          if (res.code === 0) {
+            showToast(res.msg || '加入成功');
+            localStorage.setItem('joinedClass', JSON.stringify({ inviteCode: state.classCode }));
+            // 跳转到首页（tabBar页面用switchTab）
+            setTimeout(() => {
+              switchTab('index.html');
+            }, 1500);
+          } else {
+            showToast(res.msg || '加入失败');
+          }
+        }).catch(err => {
+          hideLoading();
+          showToast('网络错误');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

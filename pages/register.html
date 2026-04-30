@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>知伴AI - 注册</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    .container {
+      padding: 30px 25px;
+      min-height: 100vh;
+      background-color: #ffffff;
+      box-sizing: border-box;
+    }
+    
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #7B68EE;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    form {
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    
+    .input-group {
+      margin-bottom: 25px;
+    }
+    
+    .input-item {
+      position: relative;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .label {
+      display: block;
+      font-size: 15px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .input {
+      font-size: 16px;
+      height: 40px;
+      line-height: 40px;
+      color: #333;
+      width: 100%;
+      border: none;
+      background: transparent;
+    }
+    
+    .placeholder {
+      color: #ccc;
+      font-size: 16px;
+    }
+    
+    .code-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .code-input-field {
+      flex: 1;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 0 15px;
+      height: 50px;
+      font-size: 14px;
+      color: #333;
+      background-color: #f9f9f9;
+      box-sizing: border-box;
+    }
+    
+    .code-input-field:focus {
+      border-color: #7B68EE;
+      background-color: #fff;
+      outline: none;
+    }
+    
+    .get-code-btn {
+      min-width: 90px;
+      height: 50px;
+      background-color: #7B68EE;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 500;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    
+    .get-code-btn:active {
+      background-color: #6A5ACD;
+    }
+    
+    .get-code-btn.disabled {
+      background-color: #ccc;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .countdown-text {
+      min-width: 90px;
+      height: 50px;
+      background-color: #f0f0f0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #666;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    
+    .toggle-password {
+      position: absolute;
+      right: 0;
+      bottom: 15px;
+      font-size: 12px;
+      color: #7B68EE;
+      cursor: pointer;
+    }
+    
+    .register-btn {
+      width: 100%;
+      height: 45px;
+      line-height: 45px;
+      border-radius: 22.5px;
+      background: linear-gradient(90deg, #9D7AFE, #7B68EE);
+      color: #fff;
+      font-size: 18px;
+      border: none;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+    
+    .btn-hover {
+      opacity: 0.9;
+    }
+    
+    .footer {
+      position: absolute;
+      bottom: 80px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 0;
+    }
+    
+    .footer-text {
+      font-size: 14px;
+      color: #999;
+      margin-right: 5px;
+      
+    }
+    
+    .footer-link {
+      font-size: 15px;
+      color: #7B68EE;
+      cursor: pointer;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 9999;
+      display: none;
+    }
+    
+    .toast.show {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+    
+    /* Loading */
+    .loading-mask {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.3);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9998;
+    }
+    
+    .loading-mask.show {
+      display: flex;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #7B68EE;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <text class="logo">知伴AI</text>
+      <text class="subtitle">创建您的学习账号</text>
+    </div>
+
+    <form id="registerForm">
+      <div class="input-group">
+        <div class="input-item">
+          <text class="label">邮箱</text>
+          <input 
+            class="input" 
+            id="emailInput"
+            placeholder="输入您的常用邮箱" 
+            placeholder-class="placeholder"
+            type="email"
+          />
+        </div>
+        
+        <div class="input-item">
+          <text class="label">验证码</text>
+          <div class="code-input-wrapper">
+            <input 
+              type="number" 
+              placeholder="请输入6位验证码" 
+              id="codeInput"
+              class="code-input-field"
+              maxlength="6"
+            />
+            <div class="get-code-btn" id="getCodeBtn">获取验证码</div>
+          </div>
+        </div>
+
+        <div class="input-item">
+          <text class="label">密码</text>
+          <input 
+            class="input" 
+            id="passwordInput"
+            placeholder="设置登录密码（6-20位）" 
+            placeholder-class="placeholder"
+            type="password"
+          />
+        </div>
+        
+        <div class="input-item">
+          <text class="label">确认密码</text>
+          <input 
+            class="input" 
+            id="confirmPasswordInput"
+            placeholder="再次输入密码" 
+            placeholder-class="placeholder"
+            type="password"
+          />
+        </div>
+      </div>
+
+      <button type="submit" class="register-btn" id="registerBtn">注册</button>
+    </form>
+
+    <div class="footer">
+      <text class="footer-text">已有账号？</text>
+      <text class="footer-link" id="goToLogin">去登录</text>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+  
+  <!-- Loading -->
+  <div class="loading-mask" id="loadingMask">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://knowpals.xyz';
+    
+    let state = {
+      email: '',
+      verificationCode: '',
+      password: '',
+      confirmPassword: '',
+      countdownActive: false,
+      countdown: 60
+    };
+    
+    const emailInput = document.getElementById('emailInput');
+    const codeInput = document.getElementById('codeInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+    const getCodeBtn = document.getElementById('getCodeBtn');
+    const registerForm = document.getElementById('registerForm');
+    const goToLogin = document.getElementById('goToLogin');
+    const toast = document.getElementById('toast');
+    const loadingMask = document.getElementById('loadingMask');
+    
+    function init() {
+      bindEvents();
+    }
+    
+    function bindEvents() {
+      emailInput.addEventListener('input', (e) => {
+        state.email = e.target.value;
+      });
+      
+      codeInput.addEventListener('input', (e) => {
+        state.verificationCode = e.target.value.replace(/\D/g, '').substring(0, 6);
+        e.target.value = state.verificationCode;
+      });
+      
+      passwordInput.addEventListener('input', (e) => {
+        state.password = e.target.value;
+      });
+      
+      confirmPasswordInput.addEventListener('input', (e) => {
+        state.confirmPassword = e.target.value;
+      });
+      
+      getCodeBtn.addEventListener('click', onGetCode);
+      
+      goToLogin.addEventListener('click', () => {
+        window.location.href = 'login.html';
+      });
+      
+      registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        onRegister();
+      });
+    }
+    
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+    
+    function showLoading() {
+      loadingMask.classList.add('show');
+    }
+    
+    function hideLoading() {
+      loadingMask.classList.remove('show');
+    }
+    
+    function validateEmail(email) {
+      const reg = /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/;
+      return reg.test(email);
+    }
+    
+    async function onGetCode() {
+      if (state.countdownActive) return;
+      
+      if (!validateEmail(state.email)) {
+        showToast('请输入正确的邮箱地址');
+        return;
+      }
+      
+      try {
+        const res = await fetch(API_BASE + '/api/v1/user/sendCode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: state.email })
+        });
+        
+        const data = await res.json();
+        
+        if (data.code === 0) {
+          showToast(data.msg || '验证码已发送');
+          startCountdown();
+        } else {
+          showToast(data.msg || '发送失败');
+        }
+      } catch (error) {
+        console.error('发送验证码失败:', error);
+        showToast('发送失败，请重试');
+      }
+    }
+    
+    function startCountdown() {
+      state.countdownActive = true;
+      state.countdown = 60;
+      
+      function updateUI() {
+        if (state.countdown > 0) {
+          getCodeBtn.className = 'countdown-text';
+          getCodeBtn.textContent = `重新发送(${state.countdown}s)`;
+          state.countdown--;
+          setTimeout(updateUI, 1000);
+        } else {
+          state.countdownActive = false;
+          getCodeBtn.className = 'get-code-btn';
+          getCodeBtn.textContent = '获取验证码';
+        }
+      }
+      
+      getCodeBtn.className = 'countdown-text';
+      getCodeBtn.textContent = `重新发送(${state.countdown}s)`;
+      state.countdown--;
+      setTimeout(updateUI, 1000);
+    }
+    
+    function validateForm() {
+      const { email, verificationCode, password, confirmPassword } = state;
+      
+      if (!email.trim()) {
+        showToast('请输入邮箱');
+        return false;
+      }
+      
+      if (!validateEmail(email)) {
+        showToast('邮箱格式不正确');
+        return false;
+      }
+      
+      if (!verificationCode.trim()) {
+        showToast('请输入验证码');
+        return false;
+      }
+      
+      if (!/^\d{6}$/.test(verificationCode)) {
+        showToast('验证码为6位数字');
+        return false;
+      }
+      
+      if (!password) {
+        showToast('请输入密码');
+        return false;
+      }
+      
+      if (password.length < 6 || password.length > 20) {
+        showToast('密码长度为6-20位');
+        return false;
+      }
+      
+      if (password !== confirmPassword) {
+        showModal('提示', '两次输入的密码不一致，请重新输入。');
+        return false;
+      }
+      
+      return true;
+    }
+    
+    function showModal(title, content) {
+      alert(content);
+    }
+    
+    async function onRegister() {
+      if (!validateForm()) return;
+      
+      showLoading();
+      
+      try {
+        const requestData = {
+          email: state.email.trim(),
+          code: state.verificationCode,
+          password: state.password,
+          username: state.email.split('@')[0],
+          role: 'student'
+        };
+        
+        const res = await fetch(API_BASE + '/api/v1/user/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestData)
+        });
+        
+        const data = await res.json();
+        hideLoading();
+        
+        if (data.code === 0) {
+          showToast('注册成功！');
+          
+          if (data.data && data.data.token) {
+            localStorage.setItem('token', data.data.token);
+          }
+          
+          let userInfo = {};
+          if (data.data && data.data.userInfo) {
+            userInfo = data.data.userInfo;
+          } else {
+            userInfo = {
+              email: state.email.trim(),
+              username: state.email.split('@')[0],
+              role: 'student'
+            };
+          }
+          localStorage.setItem('userInfo', JSON.stringify(userInfo));
+          
+          setTimeout(() => {
+            window.location.href = 'class-detail.html';
+          }, 1500);
+        } else {
+          showModal('注册失败', data.msg || data.message || '注册失败，请重试');
+        }
+      } catch (error) {
+        hideLoading();
+        console.error('注册请求失败:', error);
+        showModal('网络错误', '请检查网络连接后重试。');
+      }
+    }
+    
+    init();
+  </script>
+</body>
+</html>

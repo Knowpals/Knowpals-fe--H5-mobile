@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>课程详情</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      background-color: #f5f7fa;
+    }
+
+    .container {
+      min-height: 100vh;
+      background-color: #f5f7fa;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 当前班级信息 */
+    .current-class-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px 15px 15px;
+      color: #fff;
+      border-radius: 0 0 15px 15px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      margin-bottom: 10px;
+      margin-top: 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .class-description {
+      display: block;
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .class-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      line-height: 1.2;
+      margin-bottom: 3px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      opacity: 0.9;
+    }
+
+    /* 课程列表样式 */
+    .tasks-scroll {
+      flex: 1;
+      padding: 0 15px 60px;
+      box-sizing: border-box;
+      background-color: #fff;
+      border-radius: 10px 10px 0 0;
+      margin-top: -5px;
+      position: relative;
+      z-index: 1;
+      overflow-y: auto;
+    }
+
+    /* 任务列表 */
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 10px;
+    }
+
+    /* 任务项 */
+    .task-item {
+      background-color: #f9f9f9;
+      border-radius: 10px;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+      border-left: 4px solid #FFA500;
+      cursor: pointer;
+    }
+
+    .task-item:active {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .task-item.completed {
+      border-left-color: #4CAF50;
+    }
+
+    /* 任务内容 */
+    .task-content {
+      flex: 1;
+      margin-right: 15px;
+    }
+
+    .task-header {
+      margin-bottom: 10px;
+    }
+
+    .task-title {
+      display: block;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .task-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .task-badge {
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .task-badge.type {
+      background-color: #e8f4fd;
+      color: #2196F3;
+    }
+
+    .task-badge.deadline {
+      background-color: #fff0e6;
+      color: #FF9800;
+    }
+
+    /* 任务详情 */
+    .task-details {
+      margin-top: 8px;
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .meta-icon {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+
+    /* 进度条 */
+    .task-progress {
+      width: 100%;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background-color: #f0f0f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 5px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: #FFA500;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .task-item.completed .progress-fill {
+      background-color: #4CAF50;
+    }
+
+    .progress-text {
+      display: block;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    /* 任务状态 */
+    .task-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 50px;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #FFA500;
+      margin-bottom: 5px;
+    }
+
+    .status-indicator.completed {
+      background-color: #4CAF50;
+    }
+
+    .status-text {
+      font-size: 12px;
+      font-weight: 500;
+      color: #666;
+      text-align: center;
+    }
+
+    .task-status.completed .status-text {
+      color: #4CAF50;
+    }
+
+    .task-status.pending .status-text {
+      color: #FFA500;
+    }
+
+    /* 空状态 */
+    .empty-state {
+      padding: 50px 15px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    .empty-title {
+      display: block;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .empty-text {
+      display: block;
+      font-size: 14px;
+      color: #999;
+    }
+
+    /* 加载更多提示 */
+    .load-more {
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .loading-text {
+      font-size: 12px;
+      color: #999;
+      padding: 5px 15px;
+      background-color: #f5f5f5;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    /* 操作选择弹窗 */
+    .action-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-modal.hidden {
+      display: none;
+    }
+
+    .modal-mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      position: relative;
+      width: 80%;
+      max-width: 300px;
+      background-color: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      animation: modalSlideUp 0.3s ease;
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(25px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      flex: 1;
+      margin-right: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .modal-close {
+      font-size: 25px;
+      color: #999;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 15px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 15px 10px;
+      border-radius: 8px;
+      text-align: center;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .action-btn:active {
+      transform: scale(0.98);
+    }
+
+    .action-btn.watch-video {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .action-btn.study-report {
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
+    }
+
+    .action-btn.study-report.disabled,
+    .action-btn.quiz-practice.disabled,
+    .action-btn.video-summary.disabled {
+      background: #ccc;
+      color: #999;
+      box-shadow: none;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .action-btn.video-summary {
+      background: linear-gradient(135deg, #FFA500, #FF8C00);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(255, 165, 0, 0.3);
+    }
+
+    .action-btn.quiz-practice {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(245, 87, 108, 0.3);
+    }
+
+    .action-icon {
+      font-size: 25px;
+      margin-bottom: 5px;
+    }
+
+    .action-text {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      line-height: 1.4;
+    }
+
+    .action-desc {
+      font-size: 10px;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+
+    .task-progress-info {
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .progress-label {
+      margin-right: 5px;
+    }
+
+    .progress-value {
+      font-weight: 600;
+      color: #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 当前班级信息 -->
+    <div class="current-class-info">
+      <span class="class-description" id="classDescription">本班级的预习任务</span>
+      <div class="class-stats">
+        <div class="stat-item">
+          <span class="stat-value" id="completedCount">0</span>
+          <span class="stat-label">已完成</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="pendingCount">0</span>
+          <span class="stat-label">未完成</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="totalCount">0</span>
+          <span class="stat-label">总课程</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 课程列表（竖直滚动） -->
+    <div class="tasks-scroll" id="tasksScroll">
+      <!-- 任务列表 -->
+      <div class="tasks-list" id="tasksList"></div>
+
+      <!-- 空状态 -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">📚</div>
+        <span class="empty-title">暂无课程</span>
+        <span class="empty-text">本班级还没有发布课程</span>
+      </div>
+
+      <!-- 加载更多提示 -->
+      <div class="load-more" id="loadMore" style="display: none;">
+        <span class="loading-text">加载更多...</span>
+      </div>
+    </div>
+
+    <!-- 操作选择弹窗 -->
+    <div class="action-modal hidden" id="actionModal">
+      <div class="modal-mask" id="modalMask"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="modal-title" id="modalTitle">课程标题</span>
+          <span class="modal-close" id="modalClose">×</span>
+        </div>
+        <div class="modal-body">
+          <div class="action-buttons">
+            <div class="action-btn watch-video" id="watchVideoBtn">
+              <span class="action-icon">🎬</span>
+              <span class="action-text">观看视频</span>
+              <span class="action-desc">进入互动学习</span>
+            </div>
+            <div class="action-btn video-summary" id="videoSummaryBtn">
+              <span class="action-icon">📝</span>
+              <span class="action-text">视频总结</span>
+              <span class="action-desc" id="videoSummaryDesc">看完视频解锁</span>
+            </div>
+          </div>
+          <div class="action-buttons">
+            <div class="action-btn study-report" id="studyReportBtn">
+              <span class="action-icon">📊</span>
+              <span class="action-text">学情报告</span>
+              <span class="action-desc" id="studyReportDesc">暂无报告</span>
+            </div>
+            <div class="action-btn quiz-practice" id="quizPracticeBtn">
+              <span class="action-icon">✍️</span>
+              <span class="action-text">个性练习</span>
+              <span class="action-desc" id="quizPracticeDesc">看完视频解锁</span>
+            </div>
+          </div>
+          <div class="task-progress-info" id="progressInfo" style="display: none;">
+            <span class="progress-label">当前进度：</span>
+            <span class="progress-value" id="progressValue">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API基础地址
+    const API_BASE = 'https://knowpals.xyz';
+
+    // 请求封装
+    function requestGet(url) {
+      const token = localStorage.getItem('token') || '';
+      return fetch(API_BASE + url, {
+        method: 'GET',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      }).then(res => res.json());
+    }
+
+    // 页面数据
+    let currentClass = {};
+    let tasks = [];
+    let selectedTask = {};
+    let selectedTaskIndex = -1;
+    let hasMore = false;
+    let scrollHeight = 400;
+
+    // DOM元素
+    let tasksListEl, emptyStateEl, loadMoreEl, actionModalEl;
+    let completedCountEl, pendingCountEl, totalCountEl;
+    let modalTitleEl, modalCloseEl, modalMaskEl;
+    let studyReportBtnEl, studyReportDescEl;
+    let quizPracticeBtnEl, quizPracticeDescEl;
+    let videoSummaryBtnEl, videoSummaryDescEl;
+    let progressInfoEl, progressValueEl;
+
+    // 页面加载
+    function onLoad() {
+      // 获取URL参数
+      const params = getQueryString();
+      const classId = params.classId || 1;
+      const className = decodeURIComponent(params.className || '课程详情');
+
+      // 获取DOM元素
+      tasksListEl = document.getElementById('tasksList');
+      emptyStateEl = document.getElementById('emptyState');
+      loadMoreEl = document.getElementById('loadMore');
+      actionModalEl = document.getElementById('actionModal');
+      completedCountEl = document.getElementById('completedCount');
+      pendingCountEl = document.getElementById('pendingCount');
+      totalCountEl = document.getElementById('totalCount');
+      modalTitleEl = document.getElementById('modalTitle');
+      modalCloseEl = document.getElementById('modalClose');
+      modalMaskEl = document.getElementById('modalMask');
+      studyReportBtnEl = document.getElementById('studyReportBtn');
+      studyReportDescEl = document.getElementById('studyReportDesc');
+      quizPracticeBtnEl = document.getElementById('quizPracticeBtn');
+      quizPracticeDescEl = document.getElementById('quizPracticeDesc');
+      videoSummaryBtnEl = document.getElementById('videoSummaryBtn');
+      videoSummaryDescEl = document.getElementById('videoSummaryDesc');
+      progressInfoEl = document.getElementById('progressInfo');
+      progressValueEl = document.getElementById('progressValue');
+
+      // 计算滚动区域高度
+      calculateScrollHeight();
+
+      // 绑定事件
+      modalCloseEl.addEventListener('click', closeActionModal);
+      modalMaskEl.addEventListener('click', closeActionModal);
+      document.getElementById('watchVideoBtn').addEventListener('click', goToVideoPlay);
+      studyReportBtnEl.addEventListener('click', goToStudyData);
+      quizPracticeBtnEl.addEventListener('click', goToQuizPractice);
+      videoSummaryBtnEl.addEventListener('click', goToVideoSummary);
+
+      // 加载班级信息
+      loadClassInfo(classId, className);
+
+      // 加载该班级的课程
+      loadClassTasks(classId);
+    }
+
+    // 获取URL参数
+    function getQueryString() {
+      const params = {};
+      const query = window.location.search.substring(1);
+      const vars = query.split('&');
+      for (let i = 0; i < vars.length; i++) {
+        const pair = vars[i].split('=');
+        params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+      }
+      return params;
+    }
+
+    // 加载班级信息
+    function loadClassInfo(classId, className) {
+      requestGet(`/api/v1/class/info/${classId}`).then(res => {
+        if (res.code === 0 && res.data && res.data.class_info) {
+          const classInfo = res.data.class_info;
+          currentClass = {
+            id: classInfo.class_id,
+            name: classInfo.class_name,
+            teacherName: classInfo.teacher_name,
+            inviteCode: classInfo.invite_code
+          };
+        } else {
+          currentClass = { id: classId, name: className || '未命名班级' };
+        }
+      }).catch(err => {
+        console.error('获取班级信息失败:', err);
+        currentClass = { id: classId, name: className || '未命名班级' };
+      });
+    }
+
+    // 加载班级课程
+    function loadClassTasks(classId) {
+      Promise.all([
+        requestGet(`/api/v1/behavior/class-progress/${classId}/all`),
+        requestGet(`/api/v1/behavior/class-progress/${classId}/todo`)
+      ]).then(([allRes, todoRes]) => {
+        let allCount = 0;
+        let pendingCount = 0;
+
+        // 处理所有视频
+        if ((allRes.code === 0 || allRes.code === 200) && allRes.data && allRes.data.progress_list) {
+          allCount = allRes.data.progress_list.length;
+          tasks = allRes.data.progress_list.map(item => {
+            const progressInfo = item.progress_info || {};
+            return {
+              id: item.video_id,
+              title: item.title,
+              status: item.status,
+              progress: item.progress_percent || 0,
+              watchTime: item.watch_time || 0,
+              duration: item.duration || 0,
+              deadline: item.deadline,
+              createdAt: item.created_at,
+              videoUrl: progressInfo.url || '',
+              videoDuration: progressInfo.duration || item.duration || 0
+            };
+          });
+
+          // 保存到本地缓存
+          localStorage.setItem('video_list_' + classId, JSON.stringify(tasks));
+
+          // 为每个视频获取个人学习统计
+          loadVideoStatsForTasks(classId);
+        }
+
+        // 处理待预习视频
+        if ((todoRes.code === 0 || todoRes.code === 200) && todoRes.data && todoRes.data.progress_list) {
+          pendingCount = todoRes.data.progress_list.length;
+        }
+
+        const completedCount = allCount - pendingCount;
+
+        updateStats(completedCount, pendingCount, tasks.length);
+        renderTasks();
+      }).catch(err => {
+        console.error('获取视频任务失败:', err);
+        updateStats(0, 0, 0);
+        renderTasks();
+      });
+    }
+
+    // 为每个视频加载个人学习统计
+    function loadVideoStatsForTasks(classId) {
+      const statPromises = tasks.map(task => {
+        return requestGet(`/api/v1/stat/student/${task.id}`).then(res => {
+          if ((res.code === 0 || res.code === 200) && res.data) {
+            const statData = res.data;
+            const watchTime = statData.watch_time || statData.time_cost || 0;
+            const videoDurationSec = task.videoDuration || task.duration || 0;
+            const correctRate = statData.correct_rate || 0;
+            const status = statData.status;
+
+            let realProgress = 0;
+            if (status === 'finished' || status === 'completed') {
+              realProgress = 100;
+            } else {
+              realProgress = statData.progress_percent || statData.progress || statData.completion_rate || 0;
+              if (realProgress > 0 && realProgress <= 1) {
+                realProgress = Math.round(realProgress * 100);
+              }
+              if (videoDurationSec > 0) {
+                let watchTimeMs = watchTime;
+                if (watchTime > videoDurationSec) {
+                  watchTimeMs = watchTime;
+                } else {
+                  watchTimeMs = watchTime * 1000;
+                }
+                const videoDurationMs = videoDurationSec * 1000;
+                const calculatedProgress = Math.min(100, Math.round((watchTimeMs / videoDurationMs) * 100));
+                if (realProgress === 0) {
+                  realProgress = calculatedProgress;
+                } else {
+                  realProgress = Math.max(realProgress, calculatedProgress);
+                }
+              }
+            }
+
+            return {
+              videoId: task.id,
+              watchTime: watchTime,
+              videoDuration: videoDurationSec,
+              correctRate: correctRate,
+              progress: realProgress,
+              status: realProgress >= 100 ? 'completed' : (realProgress > 0 ? 'in_progress' : 'pending')
+            };
+          }
+          return {
+            videoId: task.id,
+            watchTime: 0,
+            videoDuration: task.videoDuration || 0,
+            correctRate: 0,
+            progress: task.progress || 0,
+            status: task.status
+          };
+        }).catch(err => {
+          return {
+            videoId: task.id,
+            watchTime: 0,
+            videoDuration: task.videoDuration || 0,
+            correctRate: 0,
+            progress: task.progress || 0,
+            status: task.status
+          };
+        });
+      });
+
+      Promise.all(statPromises).then(statsResults => {
+        const updatedTasks = tasks.map(task => {
+          const stat = statsResults.find(s => s.videoId === task.id);
+          if (stat) {
+            return { ...task, ...stat };
+          }
+          return task;
+        });
+
+        tasks = updatedTasks;
+        localStorage.setItem('video_list_' + classId, JSON.stringify(updatedTasks));
+
+        const completedCount = tasks.filter(t => t.progress >= 100).length;
+        const pendingCount = tasks.filter(t => t.progress < 100).length;
+
+        updateStats(completedCount, pendingCount, tasks.length);
+        renderTasks();
+      });
+    }
+
+    // 更新统计
+    function updateStats(completed, pending, total) {
+      completedCountEl.textContent = completed;
+      pendingCountEl.textContent = pending;
+      totalCountEl.textContent = total;
+    }
+
+    // 渲染任务列表
+    function renderTasks() {
+      if (tasks.length === 0) {
+        tasksListEl.innerHTML = '';
+        emptyStateEl.style.display = 'block';
+        loadMoreEl.style.display = 'none';
+        return;
+      }
+
+      emptyStateEl.style.display = 'none';
+      loadMoreEl.style.display = hasMore ? 'block' : 'none';
+
+      tasksListEl.innerHTML = tasks.map((task, index) => {
+        const isCompleted = task.progress >= 100;
+        const deadlineStr = task.deadline ? `📅 ${task.deadline}` : '';
+
+        return `
+          <div class="task-item ${isCompleted ? 'completed' : ''}" data-index="${index}">
+            <div class="task-content">
+              <div class="task-header">
+                <span class="task-title">${task.title}</span>
+                <div class="task-badges">
+                  <span class="task-badge type">视频课程</span>
+                  ${deadlineStr ? `<span class="task-badge deadline">${deadlineStr}</span>` : ''}
+                </div>
+              </div>
+              <div class="task-details">
+                <div class="task-meta">
+                  <div class="meta-item">
+                    <span class="meta-icon">⏱️</span>
+                    <span class="meta-text">${formatDuration(task.videoDuration || task.duration)}</span>
+                  </div>
+                </div>
+                <div class="task-progress">
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${task.progress}%"></div>
+                  </div>
+                  <span class="progress-text">完成进度 ${task.progress}%</span>
+                </div>
+              </div>
+            </div>
+            <div class="task-status ${isCompleted ? 'completed' : 'pending'}">
+              <div class="status-indicator ${isCompleted ? 'completed' : ''}"></div>
+              <span class="status-text">${isCompleted ? '已完成' : '待完成'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 绑定点击事件
+      tasksListEl.querySelectorAll('.task-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const index = parseInt(this.dataset.index);
+          onTaskTap(index);
+        });
+      });
+    }
+
+    // 格式化时长
+    function formatDuration(seconds) {
+      if (!seconds) return '0分钟';
+      const mins = Math.floor(seconds / 60);
+      return `${mins}分钟`;
+    }
+
+    // 计算滚动区域高度
+    function calculateScrollHeight() {
+      const windowHeight = window.innerHeight;
+      const navbarHeight = 60;
+      const classInfoHeight = 110;
+      const bottomMargin = 50;
+
+      const availableHeight = windowHeight - navbarHeight - classInfoHeight - bottomMargin;
+      scrollHeight = Math.max(availableHeight, 300);
+
+      document.getElementById('tasksScroll').style.height = scrollHeight + 'px';
+    }
+
+    // 点击课程卡片
+    function onTaskTap(index) {
+      selectedTask = tasks[index];
+      selectedTaskIndex = index;
+
+      modalTitleEl.textContent = selectedTask.title;
+      progressValueEl.textContent = selectedTask.progress + '%';
+
+      // 更新学情报告按钮状态
+      if (!selectedTask.progress || selectedTask.progress === 0) {
+        studyReportBtnEl.classList.add('disabled');
+        studyReportDescEl.textContent = '暂无报告';
+      } else {
+        studyReportBtnEl.classList.remove('disabled');
+        studyReportDescEl.textContent = '查看学习情况';
+      }
+
+      // 更新个性练习按钮状态
+      if (selectedTask.progress < 100) {
+        quizPracticeBtnEl.classList.add('disabled');
+        quizPracticeDescEl.textContent = '看完视频解锁';
+      } else {
+        quizPracticeBtnEl.classList.remove('disabled');
+        quizPracticeDescEl.textContent = '巩固薄弱点';
+      }
+
+      // 更新视频总结按钮状态
+      if (selectedTask.progress < 100) {
+        videoSummaryBtnEl.classList.add('disabled');
+        videoSummaryDescEl.textContent = '看完视频解锁';
+      } else {
+        videoSummaryBtnEl.classList.remove('disabled');
+        videoSummaryDescEl.textContent = '查看视频总结';
+      }
+
+      // 显示进度信息
+      progressInfoEl.style.display = selectedTask.progress > 0 ? 'block' : 'none';
+
+      actionModalEl.classList.remove('hidden');
+    }
+
+    // 关闭操作弹窗
+    function closeActionModal() {
+      actionModalEl.classList.add('hidden');
+    }
+
+    // 跳转到视频播放页
+    function goToVideoPlay() {
+      closeActionModal();
+      const url = `video-play.html?videoId=${selectedTask.id}&courseTitle=${encodeURIComponent(selectedTask.title)}&classId=${currentClass.id}`;
+      window.location.href = url;
+    }
+
+    // 跳转到学情报告页面
+    function goToStudyData() {
+      if (!selectedTask.progress || selectedTask.progress === 0) {
+        alert('您尚未观看此课程，暂无学情报告。请先观看视频课程。');
+        return;
+      }
+
+      closeActionModal();
+      const url = `study-data.html?videoId=${selectedTask.id}&courseTitle=${encodeURIComponent(selectedTask.title)}&classId=${currentClass.id}&progress=${selectedTask.progress}`;
+      window.location.href = url;
+    }
+
+    // 跳转到个性练习页面
+    function goToQuizPractice() {
+      if (!selectedTask.progress || selectedTask.progress === 0) {
+        alert('请先观看视频课程，解锁个性练习功能。');
+        return;
+      }
+
+      closeActionModal();
+      const url = `quiz-practice.html?videoId=${selectedTask.id}&videoTitle=${encodeURIComponent(selectedTask.title)}&classId=${currentClass.id}`;
+      window.location.href = url;
+    }
+
+    // 跳转到视频总结页面
+    function goToVideoSummary() {
+      if (!selectedTask.progress || selectedTask.progress < 100) {
+        alert('请先看完视频课程，解锁视频总结功能。');
+        return;
+      }
+
+      closeActionModal();
+      const url = `study-report.html?videoId=${selectedTask.id}&videoTitle=${encodeURIComponent(selectedTask.title)}&classId=${currentClass.id}`;
+      window.location.href = url;
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', onLoad);
+  </script>
+</body>
+</html>

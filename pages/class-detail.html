@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的班级</title>
+  <style>
+/* pages/class-detail/class-detail.wxss */
+
+/* 顶部导航栏 - 与原小程序一致 */
+:root {
+  --status-bar-height: 44px;
+  --navigation-bar-height: 44px;
+}
+
+.container {
+    min-height: 100vh;
+    background-color: #f5f7fa;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 120px;
+  }
+
+/* 顶部导航栏 */
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  z-index: 500;
+}
+
+.status-bar {
+  height: var(--status-bar-height);
+  width: 100%;
+}
+
+.navigation-bar {
+  height: var(--navigation-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #333;
+}
+  
+  /* ==================== 顶部统计区域 ==================== */
+  .stats-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 30px;
+    color: #fff;
+    border-radius: 0 0 30px 30px;
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+    margin-bottom: 20px;
+  }
+  
+  .stats-content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .stats-icon {
+    font-size: 60px;
+    margin-right: 30px;
+    opacity: 0.9;
+  }
+  
+  .stats-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .stats-title {
+    font-size: 40px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+  }
+  
+  .stats-count {
+    font-size: 48px;
+    font-weight: bold;
+  }
+
+  /* ==================== 班级垂直列表区域 ==================== */
+  .classes-container {
+    background-color: #fff;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+/* 标题区域 */
+.section-header {       
+    padding: 30px 30px 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .section-title {
+    font-size: 36px;
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 10px;
+  }
+  
+  .list-hint {
+    font-size: 24px;
+    color: #666;
+    display: block;
+  }
+
+/* 垂直滚动容器 */
+.classes-vertical-scroll {
+    flex: 1;
+    padding: 0;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+/* 班级网格布局 */
+.classes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: center;
+  }
+
+.class-card {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    border: 2px solid #f0f0f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .class-card.active {
+    border-color: #7B68EE;
+    box-shadow: 0 8px 30px rgba(123, 104, 238, 0.2);
+    transform: translateY(-4px);
+  }
+
+  .class-card:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+/* 班级头像 */
+.class-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #9D7AFE, #7B68EE);
+  }
+
+  .avatar-text {
+    font-size: 50px;
+    color: #fff;
+    font-weight: bold;
+  }
+
+/* 班级内容 */
+.class-content {
+    width: 85%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .class-name {
+    display: block;
+    font-size: 30px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    line-height: 1.3;
+    height: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-align: center;
+    width: 100%;
+  }
+
+  .class-teacher {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 30px;
+    color: #666;
+    margin-bottom: 10px;
+    width: 100%;
+    margin-top: -20px;
+  }
+
+  .teacher-icon {
+    font-size: 20px;
+  }
+
+/* 班级元信息 */
+.class-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 24px;
+    color: #666;
+    width: 100%;
+  }
+
+  .meta-icon {
+    font-size: 20px;
+  }
+
+/* 空状态 */
+.empty-state {
+    padding: 100px 30px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .empty-icon {
+    font-size: 100px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+  }
+
+  .empty-title {
+    display: block;
+    font-size: 36px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  .empty-text {
+    display: block;
+    font-size: 28px;
+    color: #999;
+    margin-bottom: 30px;
+  }
+
+  .join-class-btn {
+    padding: 20px 40px;
+    background: linear-gradient(135deg, #7B68EE, #9D7AFE);
+    color: #fff;
+    border-radius: 12px;
+    font-size: 28px;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(123, 104, 238, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .join-class-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 10px rgba(123, 104, 238, 0.2);
+  }
+
+  /* ==================== 底部导航栏 ==================== */
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 200;
+  }
+
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #999999;
+    font-size: 24px;
+    text-decoration: none;
+  }
+
+  .tab-item.active {
+    color: #7B68EE;
+  }
+
+  .tab-icon {
+    font-size: 44px;
+    margin-bottom: 6px;
+  }
+
+  /* 底部未完成预习提示 - 显示在导航栏上方 */
+  .bottom-notice {
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    background: linear-gradient(90deg, #FFA500, #FF8C00);
+    padding: 20px 30px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 150;
+    box-shadow: 0 -4px 20px rgba(255, 165, 0, 0.3);
+    cursor: pointer;
+  }
+
+  .bottom-notice:active {
+    opacity: 0.9;
+  }
+
+  .notice-content {
+    display: flex;
+    align-items: center;
+  }
+
+  .notice-icon {
+    font-size: 40px;
+    margin-right: 20px;
+    opacity: 0.9;
+  }
+
+  .notice-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .notice-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .notice-subtitle {
+    font-size: 22px;
+    opacity: 0.9;
+  }
+
+  .notice-arrow {
+    font-size: 40px;
+    opacity: 0.7;
+    font-weight: bold;
+    margin-left: 15px;
+  }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航栏 - 与原小程序一致 -->
+  <div class="top-nav">
+    <div class="status-bar"></div>
+    <div class="navigation-bar">
+      <span class="nav-title">我的班级</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- 顶部班级数量统计 -->
+    <div class="stats-section">
+      <div class="stats-content">
+        <div class="stats-icon">🏫</div>
+        <div class="stats-info">
+          <span class="stats-title">我的班级</span>
+          <span class="stats-count" id="classCount">0 个</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 班级垂直列表容器 -->
+    <div class="classes-container">
+      <!-- 标题和数量提示 -->
+      <div class="section-header">
+        <span class="section-title">我的班级</span>
+        <span class="list-hint">点击班级查看对应课程</span>
+      </div>
+      
+      <!-- 垂直滚动容器 -->
+      <div class="classes-vertical-scroll" id="scrollContainer">
+        <!-- 班级网格列表 -->
+        <div class="classes-grid" id="classesGrid"></div>
+        
+        <!-- 空状态 -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <div class="empty-icon">🏫</div>
+          <span class="empty-title">暂无班级</span>
+          <span class="empty-text">您还没有加入任何班级</span>
+          <div class="join-class-btn" id="goToJoinClass">加入班级</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部未完成预习提示 -->
+    <div class="bottom-notice" id="bottomNotice" style="display: none;">
+      <div class="notice-content">
+        <div class="notice-icon">📋</div>
+        <div class="notice-info">
+          <span class="notice-title">您有 <span id="pendingCount">0</span> 个未完成预习</span>
+          <span class="notice-subtitle">点击查看并继续学习</span>
+        </div>
+      </div>
+      <div class="notice-arrow">›</div>
+    </div>
+
+    <!-- 底部导航栏 - 与原小程序tabBar一致 -->
+    <div class="tab-bar">
+      <a href="../index.html" class="tab-item">
+        <span class="tab-icon">🏠</span>
+        <span>首页</span>
+      </a>
+      <a href="class-detail.html" class="tab-item active">
+        <span class="tab-icon">📚</span>
+        <span>学习</span>
+      </a>
+      <a href="me.html" class="tab-item">
+        <span class="tab-icon">👤</span>
+        <span>我的</span>
+      </a>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+  // pages/class-detail/class-detail.js
+
+  // 页面状态
+  const state = {
+    classes: [],
+    currentClassId: null,
+    pendingCount: 0,
+    scrollHeight: 400,
+    isLoading: true,
+    isLoadingLock: false,
+    isFromVideoPlay: false
+  };
+
+  // DOM元素
+  let classCountEl, classesGridEl, emptyStateEl, bottomNoticeEl, pendingCountEl, scrollContainerEl;
+
+  // API基础地址 - 与原小程序一致
+  const API_BASE = 'https://knowpals.xyz';
+
+  // 封装请求方法 - 与原小程序request.js一致
+  function requestGet(url) {
+    const token = localStorage.getItem('token') || '';
+    const fullUrl = API_BASE + url;
+    
+    console.log('========== 请求开始 ==========');
+    console.log('>>> URL:', fullUrl);
+    console.log('>>> Token:', token ? token.substring(0, 20) + '...' : '无Token');
+    console.log('================================');
+    
+    return fetch(fullUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json'
+      }
+    }).then(res => {
+      console.log('>>> 状态码:', res.status);
+      return res.json();
+    }).then(data => {
+      console.log('>>> 响应数据:', data);
+      return data;
+    });
+  }
+
+  // 初始化
+  function init() {
+    classCountEl = document.getElementById('classCount');
+    classesGridEl = document.getElementById('classesGrid');
+    emptyStateEl = document.getElementById('emptyState');
+    bottomNoticeEl = document.getElementById('bottomNotice');
+    pendingCountEl = document.getElementById('pendingCount');
+    scrollContainerEl = document.getElementById('scrollContainer');
+
+    calculateScrollHeight();
+    loadClasses();
+
+    // 绑定加入班级按钮
+    document.getElementById('goToJoinClass').addEventListener('click', goToJoinClass);
+    
+    // 绑定底部通知点击
+    bottomNoticeEl.addEventListener('click', goToPendingTasks);
+  }
+
+  // 加载班级数据
+  function loadClasses() {
+    if (state.isLoadingLock) {
+      console.log('⏳ 请求进行中，跳过重复调用');
+      return;
+    }
+    
+    state.isLoading = true;
+    state.isLoadingLock = true;
+
+    requestGet('/api/v1/class/my-joined').then(res => {
+      console.log('📡 获取班级列表响应:', res);
+
+      let classes = [];
+      let totalPending = 0;
+
+      if ((res.code === 0 || res.code === 200) && res.data && res.data.class_list) {
+        classes = res.data.class_list.map(c => ({
+          id: c.class_id,
+          name: c.class_name,
+          teacherName: c.teacher_name,
+          inviteCode: c.invite_code
+        }));
+
+        const todoPromises = classes.map(c =>
+          requestGet(`/api/v1/behavior/class-progress/${c.id}/todo`).then(todoRes => {
+            if ((todoRes.code === 0 || todoRes.code === 200) && todoRes.data && todoRes.data.progress_list) {
+              // 过滤掉已完成的任务（进度 >= 100%）
+              return todoRes.data.progress_list.filter(item => (item.progress_percent || 0) < 100).length;
+            }
+            return 0;
+          }).catch(() => 0)
+        );
+
+        Promise.all(todoPromises).then(pendingCounts => {
+          totalPending = pendingCounts.reduce((sum, count) => sum + count, 0);
+          console.log('📋 处理后的班级列表:', classes);
+          console.log('📊 待预习总数:', totalPending);
+          
+          state.classes = classes;
+          state.pendingCount = totalPending;
+          state.isLoading = false;
+          state.isLoadingLock = false;
+          
+          render();
+        });
+      } else {
+        state.classes = [];
+        state.pendingCount = 0;
+        state.isLoading = false;
+        state.isLoadingLock = false;
+        render();
+      }
+    }).catch(err => {
+      console.error('❌ 获取班级列表失败:', err);
+      state.isLoading = false;
+      state.isLoadingLock = false;
+      wxShowToast('获取班级列表失败');
+    });
+  }
+
+  // 渲染页面
+  function render() {
+    // 更新班级数量
+    classCountEl.textContent = state.classes.length + ' 个';
+
+    // 渲染班级列表
+    if (state.classes.length === 0) {
+      emptyStateEl.style.display = 'flex';
+      classesGridEl.style.display = 'none';
+    } else {
+      emptyStateEl.style.display = 'none';
+      classesGridEl.style.display = 'flex';
+      
+      classesGridEl.innerHTML = state.classes.map((item, index) => `
+        <div class="class-card ${state.currentClassId === item.id ? 'active' : ''}" data-index="${index}">
+          <div class="class-avatar">
+            <span class="avatar-text">${item.name ? item.name.substring(0, 1) : '班'}</span>
+          </div>
+          <div class="class-content">
+            <span class="class-name">${item.name}</span>
+            <div class="class-teacher">
+              <span class="teacher-icon">👨‍🏫</span>
+              <span class="teacher-name">${item.teacherName}</span>
+            </div>
+            <div class="class-meta">
+              <span class="meta-icon">👥</span>
+              <span class="meta-text">${item.studentCount || 0}人</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // 绑定班级卡片点击事件
+      classesGridEl.querySelectorAll('.class-card').forEach(card => {
+        card.addEventListener('click', function() {
+          const index = parseInt(this.dataset.index);
+          onClassTap(index);
+        });
+      });
+    }
+
+    // 显示底部通知
+    if (state.pendingCount > 0) {
+      bottomNoticeEl.style.display = 'flex';
+      pendingCountEl.textContent = state.pendingCount;
+    } else {
+      bottomNoticeEl.style.display = 'none';
+    }
+
+    // 重新计算滚动区域高度（底部通知显示后）
+    calculateScrollHeight();
+  }
+
+  // 计算滚动区域高度
+  function calculateScrollHeight() {
+    const windowHeight = window.innerHeight;
+    const statusBarHeight = 120;
+    const statsHeight = 180;
+    const bottomNoticeHeight = state.pendingCount > 0 ? 120 : 0;
+    const bottomMargin = 40;
+    
+    const availableHeight = windowHeight - statusBarHeight - statsHeight - bottomNoticeHeight - bottomMargin;
+    state.scrollHeight = Math.max(availableHeight, 300);
+
+    if (scrollContainerEl) {
+      scrollContainerEl.style.height = state.scrollHeight + 'px';
+    }
+  }
+
+  // 点击班级卡片 - 跳转到课程详情页
+  function onClassTap(index) {
+    const classData = state.classes[index];
+    const classId = classData.id;
+    
+    console.log('点击班级:', classData.name, 'ID:', classId);
+    
+    state.currentClassId = classId;
+    
+    // 直接跳转，不使用navigateTo
+    window.location.href = `class-course.html?classId=${classId}&className=${encodeURIComponent(classData.name)}`;
+  }
+
+  // 跳转到加入班级页面
+  function goToJoinClass() {
+    window.location.href = 'join-class.html';
+  }
+
+  // 跳转到未完成任务页面
+  function goToPendingTasks() {
+    window.location.href = 'pending-tasks.html';
+  }
+
+  // 模拟wx.showToast
+  function wxShowToast(options) {
+    const title = typeof options === 'string' ? options : options.title;
+    alert(title);
+  }
+
+  // 页面显示时刷新数据
+  document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

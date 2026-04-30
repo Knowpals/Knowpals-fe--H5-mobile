@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>设置</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f7fa; min-height: 100vh; }
+    
+    .container { min-height: 100vh; padding-bottom: 40px; }
+    
+    /* 顶部导航栏 */
+    .nav-bar { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 15px; background: #fff; border-bottom: 1px solid #eee; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+    .nav-back { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .back-icon { font-size: 18px; color: #333; }
+    .nav-title { font-size: 16px; font-weight: 600; color: #333; }
+    .nav-right { width: 30px; }
+    
+    .content { padding: 44px 15px 0; }
+    
+    /* 用户信息卡片 */
+    .user-card { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; padding: 20px; color: #fff; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); margin-top: -50px; }
+    .avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); margin: 0 auto 10px; display: block; background: rgba(255,255,255,0.2); }
+    .name { display: block; font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+    .id { display: block; font-size: 14px; opacity: 0.9; }
+    
+    /* 信息列表 */
+    .info-list { background-color: #fff; border-radius: 10px; padding: 0 15px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .info-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+    .info-item:last-child { border-bottom: none; }
+    .label { font-size: 14px; color: #666; font-weight: 500; }
+    .value { font-size: 14px; color: #333; font-weight: 500; }
+    
+    /* 操作区域 */
+    .action-section { background-color: #fff; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .action-title { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px; }
+    .action-buttons { display: flex; flex-direction: column; gap: 10px; }
+    .action-btn { padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; text-align: center; cursor: pointer; transition: all 0.2s ease; }
+    .action-btn:active { opacity: 0.8; transform: scale(0.98); }
+    
+    .btn-change-email { background: #f5f5f5; color: #333; }
+    .btn-change-avatar { background: #e6f7ff; color: #1890ff; }
+    .btn-about { background: #f5f5f5; color: #333; }
+    .btn-logout { background-color: #ffebee; color: #f44336; margin-top: 10px; }
+    
+    /* 版本信息 */
+    .version-info { text-align: center; padding: 20px; color: #999; font-size: 12px; }
+    
+    /* 加载状态 */
+    .loading-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .loading-mask.hidden { display: none; }
+    .loading-content { background: #fff; border-radius: 8px; padding: 20px 30px; display: flex; flex-direction: column; align-items: center; }
+    .loading-spinner { width: 30px; height: 30px; border: 2px solid #f0f0f0; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: #666; margin-top: 10px; }
+    
+    /* Toast */
+    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部导航栏 -->
+    <div class="nav-bar">
+      <div class="nav-back" id="backBtn">
+        <span class="back-icon">←</span>
+      </div>
+      <span class="nav-title">设置</span>
+      <div class="nav-right"></div>
+    </div>
+
+    <div class="content">
+      <!-- 用户信息卡片 -->
+      <div class="user-card">
+        <img class="avatar" id="avatar" src="../../images/avatar.png" alt="头像">
+        <span class="name" id="username">用户</span>
+        <span class="id" id="studentId">学号: 000000</span>
+      </div>
+
+      <!-- 信息列表 -->
+      <div class="info-list">
+        <div class="info-item">
+          <span class="label">绑定邮箱</span>
+          <span class="value" id="email">未绑定</span>
+        </div>
+        <div class="info-item">
+          <span class="label">注册时间</span>
+          <span class="value" id="registerTime">--</span>
+        </div>
+        <div class="info-item">
+          <span class="label">学习天数</span>
+          <span class="value" id="registerDays">--</span>
+        </div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="action-section">
+        <span class="action-title">账号设置</span>
+        <div class="action-buttons">
+          <button class="action-btn btn-change-avatar" id="changeAvatarBtn">📷 修改头像</button>
+          <button class="action-btn btn-change-email" id="changeEmailBtn">✉️ 修改绑定邮箱</button>
+        </div>
+      </div>
+
+      <div class="action-section">
+        <span class="action-title">其他</span>
+        <div class="action-buttons">
+          <button class="action-btn btn-about" id="aboutBtn">ℹ️ 关于我们</button>
+          <button class="action-btn btn-logout" id="logoutBtn">🚪 退出登录</button>
+        </div>
+      </div>
+
+      <!-- 版本信息 -->
+      <div class="version-info">
+        <p>Knowpals v1.0.0</p>
+        <p>© 2024 All Rights Reserved</p>
+      </div>
+    </div>
+
+    <!-- 加载状态 -->
+    <div class="loading-mask hidden" id="loadingMask">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <span class="loading-text" id="loadingText">加载中...</span>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="../../js/utils.js"></script>
+  <script>
+    // 页面状态
+    const state = {
+      userInfo: null,
+      registerTime: '',
+      registerDays: 0
+    };
+
+    // 页面加载
+    document.addEventListener('DOMContentLoaded', function() {
+      // 绑定事件
+      bindEvents();
+      
+      // 加载用户信息
+      loadUserInfo();
+    });
+
+    // 绑定事件
+    function bindEvents() {
+      document.getElementById('backBtn').addEventListener('click', goBack);
+      document.getElementById('changeAvatarBtn').addEventListener('click', changeAvatar);
+      document.getElementById('changeEmailBtn').addEventListener('click', changeEmail);
+      document.getElementById('aboutBtn').addEventListener('click', showAbout);
+      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    }
+
+    // 加载用户信息
+    function loadUserInfo() {
+      // 从本地存储获取用户信息
+      var storedUserInfo = null;
+      try {
+        storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+      } catch (e) {
+        console.error('解析用户信息失败:', e);
+      }
+      
+      if (storedUserInfo) {
+        state.userInfo = storedUserInfo;
+        updateUserInfoUI(storedUserInfo);
+        calculateRegisterInfo(storedUserInfo);
+      }
+      
+      // 从服务器获取最新信息
+      loadUserInfoFromServer();
+    }
+
+    // 从服务器获取最新用户信息
+    function loadUserInfoFromServer() {
+      API.user.getUserInfo().then(function(res) {
+        console.log('服务器返回的用户信息:', res);
+        
+        if ((res.code === 0 || res.code === 200) && res.data) {
+          var userData = res.data;
+          
+          // 更新本地存储
+          var savedUserInfo = {
+            username: userData.username || '用户',
+            email: userData.email || '',
+            created_at: userData.created_at || '',
+            register_day: userData.register_day || 0,
+            student_id: userData.student_id || '000000'
+          };
+          
+          localStorage.setItem('userInfo', JSON.stringify(savedUserInfo));
+          
+          state.userInfo = savedUserInfo;
+          updateUserInfoUI(savedUserInfo);
+          calculateRegisterInfo(savedUserInfo);
+        }
+      }).catch(function(err) {
+        console.error('获取用户信息失败:', err);
+      });
+    }
+
+    // 更新用户信息UI
+    function updateUserInfoUI(userInfo) {
+      if (!userInfo) return;
+      
+      document.getElementById('username').textContent = userInfo.username || userInfo.nickName || '用户';
+      document.getElementById('studentId').textContent = '学号: ' + (userInfo.student_id || userInfo.studentId || '000000');
+      document.getElementById('email').textContent = userInfo.email || '未绑定';
+      
+      if (userInfo.avatarUrl) {
+        document.getElementById('avatar').src = userInfo.avatarUrl;
+      }
+    }
+
+    // 计算注册信息
+    function calculateRegisterInfo(userInfo) {
+      if (!userInfo) return;
+      
+      // 使用接口返回的 register_day
+      var days = userInfo.register_day || 0;
+      
+      // 格式化注册时间
+      var registerTime = '--';
+      if (userInfo.created_at) {
+        try {
+          var date = new Date(userInfo.created_at);
+          var year = date.getFullYear();
+          var month = String(date.getMonth() + 1).padStart(2, '0');
+          var day = String(date.getDate()).padStart(2, '0');
+          registerTime = year + '-' + month + '-' + day;
+        } catch (e) {
+          registerTime = userInfo.created_at;
+        }
+      }
+      
+      state.registerDays = days;
+      state.registerTime = registerTime;
+      
+      document.getElementById('registerDays').textContent = days > 0 ? days + '天' : '--';
+      document.getElementById('registerTime').textContent = registerTime;
+    }
+
+    // 返回上一页
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = '../me/me.html';
+      }
+    }
+
+    // 修改头像
+    function changeAvatar() {
+      // 模拟选择图片
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = function(e) {
+        var file = e.target.files[0];
+        if (file) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            var tempFilePath = e.target.result;
+            
+            // 更新本地数据
+            var userInfo = state.userInfo || {};
+            userInfo.avatarUrl = tempFilePath;
+            
+            state.userInfo = userInfo;
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+            
+            document.getElementById('avatar').src = tempFilePath;
+            showToast('头像更新成功');
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    }
+
+    // 修改邮箱
+    function changeEmail() {
+      showToast('此功能在后续版本开放');
+    }
+
+    // 关于我们
+    function showAbout() {
+      alert('Knowpals v1.0.0\n\n一个智能学习助手，帮助你更好地学习和掌握知识。\n\n© 2024 All Rights Reserved');
+    }
+
+    // 退出登录
+    function handleLogout() {
+      if (!confirm('确定要退出登录吗？')) {
+        return;
+      }
+      
+      // 清除登录状态
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('token');
+      
+      // 跳转登录页
+      window.location.href = '../login/login.html';
+    }
+
+    // 显示Toast
+    function showToast(message) {
+      var toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(function() {
+        toast.classList.remove('show');
+      }, 2000);
+    }
+
+    // 显示加载
+    function showLoading(text) {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('loadingMask').classList.remove('hidden');
+    }
+
+    // 隐藏加载
+    function hideLoading() {
+      document.getElementById('loadingMask').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

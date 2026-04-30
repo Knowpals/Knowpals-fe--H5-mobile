@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI 伴学助手</title>
+  <style>
+    :root {
+      --status-bar-height: 20px;
+      --safe-area-bottom: env(safe-area-inset-bottom);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      height: 100%;
+      background-color: #f5f5f7;
+    }
+
+    /* 主容器 */
+    .ai-chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #f5f5f7;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 导航栏 */
+    .ai-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .nav-left, .nav-right {
+      width: 60px;
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .back-arrow {
+      font-size: 20px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .ai-status {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 10px;
+      text-align: right;
+    }
+
+    .ai-status.online {
+      background-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+
+    .ai-status.offline {
+      background-color: rgba(0, 0, 0, 0.2);
+      color: #ccc;
+    }
+
+    /* AI 介绍卡片 */
+    .ai-intro-card {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      margin: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 10px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .ai-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+    }
+
+    .avatar-icon {
+      font-size: 25px;
+    }
+
+    .ai-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ai-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .ai-desc {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .intro-close {
+      font-size: 13px;
+      padding: 5px 12px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      cursor: pointer;
+    }
+
+    /* 快捷提问区域（固定在顶部） */
+    .quick-questions-fixed {
+      padding: 8px 10px;
+      background-color: #fff;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    .quick-questions-fixed.show {
+      display: block;
+    }
+
+    .quick-scroll {
+      white-space: nowrap;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .quick-item {
+      display: inline-block;
+      padding: 6px 12px;
+      background-color: #f0f2ff;
+      border-radius: 15px;
+      font-size: 13px;
+      color: #667eea;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
+    .quick-item:active {
+      background-color: #e0e4ff;
+    }
+
+    /* 消息列表 */
+    .message-list {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    /* 底部占位 */
+    .bottom-placeholder {
+      height: 100px;
+    }
+
+    /* 消息通用样式 */
+    .message {
+      display: flex;
+      margin-bottom: 15px;
+      align-items: flex-start;
+    }
+
+    .message-avatar {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .ai-avatar-small {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin-right: 8px;
+    }
+
+    .user-avatar-small {
+      background-color: #e0e0e0;
+      margin-left: 8px;
+    }
+
+    /* 用户消息：头像在右边，内容在左边 */
+    .user-message {
+      flex-direction: row-reverse;
+    }
+
+    .user-message .ai-avatar-small {
+      display: none;
+    }
+
+    /* AI 消息 */
+    .ai-message {
+      flex-direction: row;
+    }
+
+    .ai-message .user-avatar-small {
+      display: none;
+    }
+
+    /* 消息气泡 */
+    .message-bubble {
+      max-width: 75%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .ai-bubble {
+      background-color: #fff;
+      color: #333;
+      border-top-left-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .user-bubble {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-top-right-radius: 4px;
+      margin-left: auto;
+    }
+
+    /* 欢迎消息 */
+    .welcome-message {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .welcome-message .message-bubble {
+      max-width: 100%;
+    }
+
+    .welcome-title {
+      display: block;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .welcome-desc {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.7;
+    }
+
+    /* 消息文本 */
+    .msg-content {
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #333;
+      word-wrap: break-word;
+    }
+
+    /* 加载指示器 */
+    .loading-indicator {
+      padding: 5px 0;
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #999;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .dot:nth-child(1) { animation-delay: -0.32s; }
+    .dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* 知识点卡片 */
+    .knowledge-card {
+      background-color: #f8f9ff;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    .knowledge-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .knowledge-icon {
+      font-size: 16px;
+      margin-right: 6px;
+    }
+
+    .knowledge-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .knowledge-content {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.7;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .knowledge-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      padding: 4px 8px;
+      background-color: #e8eaff;
+      border-radius: 10px;
+      font-size: 11px;
+      color: #667eea;
+    }
+
+    /* 题目卡片 */
+    .question-card {
+      background-color: #fff;
+      border: 1px solid #e8eaff;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    .question-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .question-icon {
+      font-size: 16px;
+      margin-right: 6px;
+    }
+
+    .question-label {
+      font-size: 12px;
+      color: #667eea;
+    }
+
+    .question-title {
+      display: block;
+      font-size: 14px;
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .question-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .question-option {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      background-color: #f5f5f7;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+
+    .question-option.selected {
+      background-color: #e8eaff;
+      border-color: #667eea;
+    }
+
+    .question-option.correct {
+      background-color: #e6f7ed;
+      border-color: #52c41a;
+    }
+
+    .option-letter {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background-color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #667eea;
+      margin-right: 8px;
+    }
+
+    .question-option.selected .option-letter {
+      background-color: #667eea;
+      color: #fff;
+    }
+
+    .option-text {
+      flex: 1;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .question-actions {
+      display: flex;
+      justify-content: center;
+    }
+
+    .practice-submit-btn {
+      padding: 8px 30px;
+      background-color: #ddd;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .practice-submit-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* 视频推荐卡片 */
+    .video-card {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    .video-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .video-icon {
+      font-size: 16px;
+      margin-right: 6px;
+    }
+
+    .video-label {
+      font-size: 12px;
+      color: #667eea;
+    }
+
+    .video-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .video-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      background-color: #f5f5f7;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .video-thumb {
+      width: 50px;
+      height: 35px;
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      color: #999;
+      font-size: 12px;
+    }
+
+    .video-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-title {
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .video-duration {
+      font-size: 11px;
+      color: #999;
+    }
+
+    /* 输入区域（固定在底部） */
+    .input-area {
+      background-color: #fff;
+      padding: 10px;
+      padding-bottom: calc(10px + var(--safe-area-bottom, 0px));
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+      flex-shrink: 0;
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 100;
+    }
+
+    /* 视频上下文 */
+    .video-context {
+      display: none;
+      align-items: center;
+      padding: 6px 10px;
+      background-color: #f0f2ff;
+      border-radius: 15px;
+      margin-bottom: 8px;
+    }
+
+    .video-context.show {
+      display: flex;
+    }
+
+    .context-icon {
+      font-size: 14px;
+      margin-right: 6px;
+    }
+
+    .context-text {
+      flex: 1;
+      font-size: 12px;
+      color: #667eea;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .context-clear {
+      font-size: 16px;
+      color: #999;
+      padding: 0 4px;
+      cursor: pointer;
+    }
+
+    /* 输入行 */
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background-color: #f5f5f7;
+      border-radius: 20px;
+      padding: 0 10px;
+      min-height: 36px;
+    }
+
+    .message-input {
+      flex: 1;
+      height: 36px;
+      font-size: 14px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      outline: none;
+    }
+
+    .attach-buttons {
+      display: flex;
+      gap: 4px;
+    }
+
+    .attach-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .send-btn {
+      padding: 0 18px;
+      height: 36px;
+      background-color: #ddd;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .send-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* 更多功能选项 */
+    .more-options {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid #f0f0f0;
+      margin-top: 8px;
+    }
+
+    .more-options.show {
+      display: flex;
+    }
+
+    .option-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 15px;
+      background-color: #f5f5f7;
+      border-radius: 8px;
+      min-width: 70px;
+      cursor: pointer;
+    }
+
+    .option-icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .option-text {
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* 薄弱点快捷入口浮窗 */
+    .weak-points-float {
+      position: fixed;
+      right: 12px;
+      bottom: 110px;
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+      z-index: 90;
+      cursor: pointer;
+    }
+
+    .float-icon {
+      font-size: 16px;
+      margin-right: 4px;
+    }
+
+    .float-text {
+      font-size: 12px;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    /* 练习题反馈 */
+    .practice-feedback {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .practice-feedback.correct {
+      background-color: #e6f7ed;
+      color: #52c41a;
+    }
+
+    .practice-feedback.wrong {
+      background-color: #fff2f0;
+      color: #ff4d4f;
+    }
+
+    /* 开始练习按钮 */
+    .start-practice-btn {
+      margin-top: 8px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      font-size: 13px;
+      color: #fff;
+      cursor: pointer;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="ai-chat-container">
+    <!-- 顶部导航栏 -->
+    <div class="ai-nav-bar">
+      <div class="nav-left">
+        <span class="back-arrow" onclick="goBack()">←</span>
+      </div>
+      <div class="nav-title">AI 伴学助手</div>
+      <div class="nav-right">
+        <div class="ai-status online" id="aiStatus">在线</div>
+      </div>
+    </div>
+
+    <!-- AI 角色介绍卡片 -->
+    <div class="ai-intro-card" id="introCard">
+      <div class="ai-avatar">
+        <span class="avatar-icon">🤖</span>
+      </div>
+      <div class="ai-info">
+        <text class="ai-name">知伴 AI 助手</text>
+        <text class="ai-desc">随时为你解答学习中的疑问</text>
+      </div>
+      <div class="intro-close" onclick="hideIntro()">知道了</div>
+    </div>
+
+    <!-- 快捷提问区域（固定在顶部） -->
+    <div class="quick-questions-fixed" id="quickQuestions">
+      <div class="quick-scroll">
+        <span class="quick-item" onclick="sendQuickQuestion('这节课讲了什么？')">这节课讲了什么？</span>
+        <span class="quick-item" onclick="sendQuickQuestion('请解释这个概念')">请解释这个概念</span>
+        <span class="quick-item" onclick="sendQuickQuestion('出一道练习题')">出一道练习题</span>
+        <span class="quick-item" onclick="sendQuickQuestion('推荐相关视频')">推荐相关视频</span>
+      </div>
+    </div>
+
+    <!-- 消息列表区域 -->
+    <div class="message-list" id="messageList">
+      <!-- 欢迎消息 -->
+      <div class="message welcome-message" id="welcomeMessage">
+        <div class="message-avatar ai-avatar-small">🤖</div>
+        <div class="message-bubble">
+          <text class="welcome-title">你好，我是知伴 AI 助手</text>
+          <text class="welcome-desc">我可以帮你解答视频学习中的问题，也可以和你讨论知识点。有什么不懂的地方，尽管问我吧！</text>
+        </div>
+      </div>
+
+      <!-- 消息将通过 JS 动态添加 -->
+
+      <!-- 底部占位 -->
+      <div class="bottom-placeholder"></div>
+    </div>
+
+    <!-- 输入区域（固定在底部） -->
+    <div class="input-area">
+      <!-- 视频时间上下文 -->
+      <div class="video-context" id="videoContext">
+        <text class="context-icon">🎥</text>
+        <text class="context-text" id="contextText"></text>
+        <text class="context-clear" onclick="clearVideoContext()">×</text>
+      </div>
+
+      <!-- 输入框和发送按钮 -->
+      <div class="input-row">
+        <div class="input-wrapper">
+          <input
+            class="message-input"
+            id="msgInput"
+            type="text"
+            placeholder="输入你的问题..."
+            oninput="onInputChange()"
+            onkeypress="if(event.key==='Enter')sendMessage()"
+          >
+          <div class="attach-buttons">
+            <div class="attach-btn" onclick="toggleMoreOptions()">📎</div>
+          </div>
+        </div>
+        <div class="send-btn" id="sendBtn" onclick="sendMessage()">发送</div>
+      </div>
+
+      <!-- 更多功能选项 -->
+      <div class="more-options" id="moreOptions">
+        <div class="option-item" onclick="requestVideoSummary()">
+          <text class="option-icon">📋</text>
+          <text class="option-text">视频总结</text>
+        </div>
+        <div class="option-item" onclick="requestKnowledgeGraph()">
+          <text class="option-icon">🧠</text>
+          <text class="option-text">知识图谱</text>
+        </div>
+        <div class="option-item" onclick="requestPractice()">
+          <text class="option-icon">✍️</text>
+          <text class="option-text">练习题目</text>
+        </div>
+        <div class="option-item" onclick="requestRelatedVideos()">
+          <text class="option-icon">🎥</text>
+          <text class="option-text">相关视频</text>
+        </div>
+        <div class="option-item" onclick="viewStudyReport()">
+          <text class="option-icon">📊</text>
+          <text class="option-text">学情报告</text>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+    // API 配置
+    const API_BASE = 'https://knowpals.xyz';
+
+    // 状态管理
+    const state = {
+      aiOnline: true,
+      showIntro: true,
+      videoId: null,
+      videoTitle: '',
+      currentVideoContext: '',
+      videoDuration: 0,
+      messages: [],
+      messageId: 0,
+      inputText: '',
+      showMoreOptions: false,
+      quickQuestions: [
+        '这节课讲了什么？',
+        '请解释这个概念',
+        '出一道练习题',
+        '推荐相关视频'
+      ],
+      selectedPracticeOptions: {},
+      scrollTop: 0,
+      loading: false
+    };
+
+    // URL 参数
+    const urlParams = new URLSearchParams(location.search);
+    state.videoId = urlParams.get('videoId') ? parseInt(urlParams.get('videoId')) : null;
+    state.videoTitle = urlParams.get('videoTitle') || '当前视频';
+    state.currentVideoContext = urlParams.get('currentTime') || '';
+    state.videoDuration = urlParams.get('videoDuration') ? parseInt(urlParams.get('videoDuration')) : 0;
+
+    // 初始化
+    function init() {
+      console.log('>>> AI 伴学页面参数:', {
+        videoId: state.videoId,
+        videoTitle: state.videoTitle,
+        currentVideoContext: state.currentVideoContext
+      });
+
+      // 检查是否需要隐藏介绍卡片
+      const hasVisitedAI = localStorage.getItem('hasVisitedAI');
+      if (hasVisitedAI) {
+        hideIntro();
+      }
+
+      // 显示视频上下文
+      if (state.videoId) {
+        document.getElementById('videoContext').classList.add('show');
+        document.getElementById('contextText').textContent = `当前：${state.videoTitle} - ${state.currentVideoContext}`;
+      }
+
+      // 加载聊天历史
+      loadChatHistory();
+    }
+
+    // 加载聊天历史
+    async function loadChatHistory() {
+      if (!state.videoId) {
+        console.log('>>> 加载聊天历史: 缺少 videoId');
+        // 即使没有 videoId 也显示快捷问题
+        document.getElementById('quickQuestions').classList.add('show');
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('>>> 未登录，无法加载聊天历史');
+          document.getElementById('quickQuestions').classList.add('show');
+          return;
+        }
+
+        // 构建查询参数 - GET请求需要将参数放在URL query string中
+        const params = new URLSearchParams({
+          video_id: String(state.videoId),
+          limit: '20'
+        });
+        const url = `${API_BASE}/api/v1/agent/history?${params.toString()}`;
+
+        console.log('>>> 加载聊天历史请求:', url);
+
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('>>> 响应状态:', res.status);
+
+        if (!res.ok) {
+          console.error('>>> 请求失败，状态码:', res.status);
+          document.getElementById('quickQuestions').classList.add('show');
+          return;
+        }
+
+        const json = await res.json();
+        console.log('>>> 加载聊天历史返回:', json);
+
+        // 兼容多种返回格式
+        let messages = [];
+
+        if (Array.isArray(json.data)) {
+          messages = json.data;
+        } else if (json.data && Array.isArray(json.data.messages)) {
+          messages = json.data.messages;
+        } else if (json.data && Array.isArray(json.data.data)) {
+          messages = json.data.data;
+        } else if (Array.isArray(json.messages)) {
+          messages = json.messages;
+        }
+
+        console.log('>>> 解析到的消息数量:', messages.length);
+
+        if (messages.length > 0) {
+          const historyMessages = [];
+
+          for (let i = 0; i < messages.length; i++) {
+            const msg = messages[i];
+            let msgText = msg.content || msg.text || msg.message || '';
+            if (typeof msgText !== 'string') {
+              msgText = String(msgText);
+            }
+            const msgRole = msg.role === 'user' ? 'user' : 'ai';
+            const msgTime = msg.time || msg.created_at || formatTime(new Date());
+
+            historyMessages.push({
+              id: ++state.messageId,
+              role: msgRole,
+              type: 'text',
+              content: msgText,
+              time: msgTime
+            });
+          }
+
+          console.log('>>> 最终 messages 数组:', JSON.stringify(historyMessages, null, 2));
+
+          // 更新消息列表
+          state.messages = historyMessages;
+          hideIntro();
+
+          // 渲染历史消息
+          renderMessages();
+          
+          // 滚动到底部
+          setTimeout(() => {
+            scrollToBottom();
+          }, 100);
+        } else {
+          console.log('>>> 没有历史消息，显示快捷问题');
+          document.getElementById('quickQuestions').classList.add('show');
+        }
+      } catch (err) {
+        console.error('>>> 加载聊天历史失败:', err);
+        document.getElementById('quickQuestions').classList.add('show');
+      }
+    }
+
+    // 返回上一页
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        navigateTo('class-detail.html');
+      }
+    }
+
+    // 隐藏介绍卡片
+    function hideIntro() {
+      state.showIntro = false;
+      document.getElementById('introCard').style.display = 'none';
+      document.getElementById('quickQuestions').classList.add('show');
+      document.getElementById('welcomeMessage').style.display = 'none';
+      localStorage.setItem('hasVisitedAI', 'true');
+    }
+
+    // 输入变化
+    function onInputChange() {
+      state.inputText = document.getElementById('msgInput').value;
+      const sendBtn = document.getElementById('sendBtn');
+      if (state.inputText.trim()) {
+        sendBtn.classList.add('active');
+      } else {
+        sendBtn.classList.remove('active');
+      }
+    }
+
+    // 发送消息
+    function sendMessage() {
+      const text = state.inputText.trim();
+      console.log('>>> sendMessage 被调用, text:', text);
+      
+      if (!text) {
+        console.log('>>> text 为空，直接返回');
+        return;
+      }
+
+      // 添加用户消息
+      const userMessage = {
+        id: ++state.messageId,
+        role: 'user',
+        type: 'text',
+        content: text,
+        time: formatTime(new Date())
+      };
+
+      state.messages.push(userMessage);
+      state.inputText = '';
+      state.showMoreOptions = false;
+      state.showIntro = false;
+
+      document.getElementById('msgInput').value = '';
+      document.getElementById('sendBtn').classList.remove('active');
+      document.getElementById('moreOptions').classList.remove('show');
+
+      renderMessages();
+      scrollToBottom();
+
+      // 添加加载状态
+      addLoadingMessage();
+
+      // 调用真实 AI 接口
+      callAIChat(text);
+    }
+
+    // 调用 AI 聊天接口
+    async function callAIChat(question) {
+      if (!state.videoId) {
+        console.warn('>>> 缺少 video_id，无法调用 AI 聊天接口');
+        showToast({ title: '请先选择视频', icon: 'none' });
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        removeLoadingMessage();
+        addAIErrorMessage('请先登录');
+        return;
+      }
+
+      const params = {
+        video_id: String(state.videoId),
+        text: question
+      };
+
+      console.log('>>> 发送 AI 聊天请求:', params);
+
+      try {
+        const res = await fetch(API_BASE + '/api/v1/agent/chat', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(params)
+        });
+
+        const json = await res.json();
+        console.log('>>> AI 聊天接口返回:', json);
+
+        // 移除加载状态
+        removeLoadingMessage();
+
+        if ((json.code === 0 || json.code === 200) && json.data) {
+          const aiResponse = processAIResponse(json.data, question);
+          state.messages.push(aiResponse);
+        } else {
+          const mockResponse = generateMockResponse(question, ++state.messageId);
+          state.messages.push(mockResponse);
+        }
+
+        renderMessages();
+        scrollToBottom();
+      } catch (err) {
+        console.error('>>> AI 聊天接口失败:', err);
+        removeLoadingMessage();
+        const mockResponse = generateMockResponse(question, ++state.messageId);
+        state.messages.push(mockResponse);
+        renderMessages();
+        scrollToBottom();
+      }
+    }
+
+    // 处理 AI 响应数据
+    function processAIResponse(data, question, msgId) {
+      console.log('>>> processAIResponse 接收到的 data:', JSON.stringify(data, null, 2));
+      
+      let reply = data.reply || data.text || data.content || data.message || data.msg || data.output || '';
+      const videoId = data.video_id || data.videoId;
+      
+      // 如果 reply 是对象（而不是字符串），提取文本内容
+      if (typeof reply === 'object' && reply !== null) {
+        if (reply.text) {
+          reply = reply.text;
+        } else if (reply.content) {
+          reply = reply.content;
+        } else if (reply.message) {
+          reply = reply.message;
+        } else if (reply.choices && reply.choices[0] && reply.choices[0].message) {
+          reply = reply.choices[0].message.content || '';
+        } else {
+          reply = parseToolCall(reply);
+        }
+      } else if (typeof reply === 'string') {
+        // 如果 reply 是 JSON 字符串，尝试解析
+        try {
+          const parsed = JSON.parse(reply);
+          if (parsed.text) {
+            reply = parsed.text;
+          } else if (parsed.content) {
+            reply = parsed.content;
+          } else if (parsed.message) {
+            reply = parsed.message;
+          } else if (parsed.choices && parsed.choices[0] && parsed.choices[0].message) {
+            reply = parsed.choices[0].message.content || '';
+          } else {
+            reply = parseToolCall(parsed);
+          }
+        } catch (e) {
+          // 不是 JSON 字符串，直接使用原文
+        }
+      }
+      
+      // 如果 reply 还是空，尝试使用 context
+      if (!reply && data.context) {
+        reply = data.context;
+      }
+      
+      // 如果 reply 是空字符串，尝试从其他可能的字段获取
+      if (!reply && typeof data === 'object') {
+        const possibleFields = ['response', 'answer', 'result', 'data', 'body'];
+        for (const field of possibleFields) {
+          if (data[field]) {
+            reply = typeof data[field] === 'string' ? data[field] : JSON.stringify(data[field]);
+            break;
+          }
+        }
+      }
+      
+      // 如果 reply 是空对象或数组，转为字符串
+      if (typeof reply === 'object') {
+        reply = JSON.stringify(reply);
+      }
+      
+      // 如果 reply 还是空，给出友好提示
+      if (!reply || reply === '[object Object]' || reply === '{}' || reply === '[]' || reply === 'null') {
+        reply = '抱歉，我暂时无法回答这个问题。';
+      }
+      
+      if (typeof reply !== 'string') {
+        reply = String(reply);
+      }
+
+      // 判断问题类型返回不同类型的消息
+      const q = question.toLowerCase();
+
+      // 练习题类型
+      if (q.includes('练习') || q.includes('题目') || q.includes('做题')) {
+        return {
+          id: ++state.messageId,
+          role: 'ai',
+          type: 'text',
+          content: reply + '\n\n💡 如需开始练习，请点击下方"开始练习"按钮。',
+          time: formatTime(new Date()),
+          showPracticeButton: true
+        };
+      }
+
+      // 视频推荐类型
+      if (q.includes('视频') || q.includes('推荐')) {
+        return {
+          id: ++state.messageId,
+          role: 'ai',
+          type: 'video',
+          content: parseVideoRecommendations(reply),
+          time: formatTime(new Date())
+        };
+      }
+
+      // 默认文本回复
+      return {
+        id: ++state.messageId,
+        role: 'ai',
+        type: 'text',
+        content: String(reply),
+        time: formatTime(new Date()),
+        video_id: videoId
+      };
+    }
+
+    // 解析工具调用格式
+    function parseToolCall(parsed) {
+      const name = parsed.name || parsed.action || '';
+      const args = parsed.args || {};
+      
+      if (name.includes('memory') || name.includes('weak_knowledge')) {
+        const knowledgeIds = args.knowledge_ids || args.weak_knowledge_ids || [];
+        if (knowledgeIds.length > 0) {
+          return `我发现了你的 ${knowledgeIds.length} 个薄弱知识点，让我为你生成针对性的练习...`;
+        }
+        return '我正在分析你的学习情况...';
+      }
+      
+      if (name.includes('video') || name.includes('recommend')) {
+        const videos = args.videos || args.recommend_videos || [];
+        if (videos.length > 0) {
+          return `为你推荐 ${videos.length} 个相关视频：\n` + 
+                 videos.map((v, i) => `${i + 1}. ${v.title || v.name || '视频' + (i+1)}`).join('\n');
+        }
+        return '正在为你搜索相关视频...';
+      }
+      
+      if (name.includes('question') || name.includes('quiz')) {
+        return '正在为你生成练习题...';
+      }
+      
+      return `已收到你的问题，正在处理中...`;
+    }
+
+    // 解析视频推荐
+    function parseVideoRecommendations(reply) {
+      try {
+        return [
+          { title: '勾股定理证明方法', duration: '8:30', video_id: 101 },
+          { title: '勾股定理应用实例', duration: '12:15', video_id: 102 },
+          { title: '直角三角形判定技巧', duration: '6:45', video_id: 103 }
+        ];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // 生成 Mock 回复
+    function generateMockResponse(question, msgId) {
+      const q = question.toLowerCase();
+
+      if (q.includes('讲') || q.includes('内容') || q.includes('总结')) {
+        return {
+          id: msgId,
+          role: 'ai',
+          type: 'text',
+          content: '这节课主要讲解了勾股定理的概念和应用。\n\n📌 核心知识点：\n1. 勾股定理的定义\n2. 勾股定理的证明方法\n3. 勾股定理在实际问题中的应用\n\n建议观看配套练习视频来巩固知识哦！',
+          time: formatTime(new Date())
+        };
+      }
+
+      if (q.includes('解释') || q.includes('概念') || q.includes('什么是')) {
+        return {
+          id: msgId,
+          role: 'ai',
+          type: 'knowledge',
+          content: {
+            title: '勾股定理',
+            description: '勾股定理是平面几何中最重要的定理之一。它指出：在直角三角形中，两条直角边的平方和等于斜边的平方。用公式表示为：a² + b² = c²，其中 a、b 为直角边，c 为斜边。',
+            tags: ['几何', '直角三角形', '平方'],
+            knowledge_id: 'k1'
+          },
+          time: formatTime(new Date())
+        };
+      }
+
+      if (q.includes('练习') || q.includes('题目') || q.includes('做题')) {
+        return {
+          id: msgId,
+          role: 'ai',
+          type: 'question',
+          content: {
+            title: '已知直角三角形的两条直角边分别为3和4，请问斜边的长度是多少？',
+            options: [
+              { id: 0, letter: 'A', text: '5', isCorrect: true },
+              { id: 1, letter: 'B', text: '6', isCorrect: false },
+              { id: 2, letter: 'C', text: '7', isCorrect: false },
+              { id: 3, letter: 'D', text: '8', isCorrect: false }
+            ]
+          },
+          time: formatTime(new Date())
+        };
+      }
+
+      if (q.includes('视频') || q.includes('推荐')) {
+        return {
+          id: msgId,
+          role: 'ai',
+          type: 'video',
+          content: [
+            { title: '勾股定理证明方法', duration: '8:30', video_id: 101 },
+            { title: '勾股定理应用实例', duration: '12:15', video_id: 102 },
+            { title: '直角三角形判定技巧', duration: '6:45', video_id: 103 }
+          ],
+          time: formatTime(new Date())
+        };
+      }
+
+      // 默认回复
+      return {
+        id: msgId,
+        role: 'ai',
+        type: 'text',
+        content: `好的，我理解你的问题："${question}"\n\n关于这个知识点，我来为你详细解答...\n\n💡 如果你想针对性地巩固薄弱点，可以点击下方"薄弱点复习"查看。\n\n如果你有其他问题，可以继续问我哦！`,
+        time: formatTime(new Date())
+      };
+    }
+
+    // 渲染消息列表
+    function renderMessages() {
+      const messageList = document.getElementById('messageList');
+      
+      // 保留欢迎消息和底部占位
+      const welcomeMsg = document.getElementById('welcomeMessage');
+      const bottomPlaceholder = messageList.querySelector('.bottom-placeholder');
+      
+      // 清空消息列表（保留欢迎消息和底部占位）
+      messageList.innerHTML = '';
+      
+      // 重新添加欢迎消息
+      if (!state.showIntro) {
+        // 不显示欢迎消息
+      } else {
+        messageList.appendChild(welcomeMsg);
+      }
+      
+      // 渲染所有消息
+      state.messages.forEach(msg => {
+        const msgElement = createMessageElement(msg);
+        messageList.appendChild(msgElement);
+      });
+      
+      // 添加底部占位
+      messageList.appendChild(bottomPlaceholder);
+    }
+
+    // 创建消息元素
+    function createMessageElement(msg) {
+      const div = document.createElement('div');
+      div.className = `message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`;
+      div.dataset.id = msg.id;
+
+      const avatarClass = msg.role === 'user' ? 'user-avatar-small' : 'ai-avatar-small';
+      const avatarIcon = msg.role === 'user' ? '👤' : '🤖';
+      const bubbleClass = msg.role === 'user' ? 'user-bubble' : 'ai-bubble';
+
+      let bubbleContent = '';
+
+      if (msg.type === 'text') {
+        bubbleContent = `<text class="msg-content">${escapeHtml(msg.content)}</text>`;
+        
+        // 如果有练习按钮
+        if (msg.showPracticeButton) {
+          bubbleContent += `<div class="start-practice-btn" onclick="startPracticeFromAI()">开始练习</div>`;
+        }
+      } else if (msg.type === 'knowledge' && msg.content) {
+        bubbleContent = `
+          <div class="knowledge-card">
+            <div class="knowledge-header">
+              <text class="knowledge-icon">💡</text>
+              <text class="knowledge-title">${escapeHtml(msg.content.title || '')}</text>
+            </div>
+            <text class="knowledge-content">${escapeHtml(msg.content.description || '')}</text>
+            <div class="knowledge-tags">
+              ${(msg.content.tags || []).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      } else if (msg.type === 'question' && msg.content) {
+        const question = msg.content;
+        const hasSelection = question.options.some(opt => opt.selected);
+        const isSubmitted = msg.submitted;
+        
+        bubbleContent = `
+          <div class="question-card">
+            <div class="question-header">
+              <text class="question-icon">✍️</text>
+              <text class="question-label">练习题</text>
+            </div>
+            <text class="question-title">${escapeHtml(question.title || '')}</text>
+            <div class="question-options">
+              ${(question.options || []).map((opt, idx) => {
+                let optClass = 'question-option';
+                if (opt.selected) optClass += ' selected';
+                if (isSubmitted) {
+                  if (opt.isCorrect) optClass += ' correct';
+                  if (opt.selected && !opt.isCorrect) optClass += ' wrong';
+                }
+                const clickHandler = isSubmitted ? '' : `onclick="selectPracticeOption(${msg.id}, ${opt.id})"`;
+                return `
+                  <div class="${optClass}" ${clickHandler} data-optid="${opt.id}">
+                    <span class="option-letter">${opt.letter}</span>
+                    <text class="option-text">${escapeHtml(opt.text)}</text>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            ${!isSubmitted ? `
+              <div class="question-actions">
+                <div class="practice-submit-btn ${hasSelection ? 'active' : ''}" 
+                     onclick="submitPractice(${msg.id})">提交答案</div>
+              </div>
+            ` : ''}
+            ${msg.feedback ? `<div class="practice-feedback ${msg.feedback.includes('正确') ? 'correct' : 'wrong'}">${escapeHtml(msg.feedback)}</div>` : ''}
+          </div>
+        `;
+      } else if (msg.type === 'video' && Array.isArray(msg.content)) {
+        bubbleContent = `
+          <div class="video-card">
+            <div class="video-header">
+              <text class="video-icon">🎥</text>
+              <text class="video-label">相关视频推荐</text>
+            </div>
+            <div class="video-list">
+              ${msg.content.map(v => `
+                <div class="video-item" onclick="playRecommendVideo(${v.video_id})">
+                  <div class="video-thumb">缩略图</div>
+                  <div class="video-info">
+                    <text class="video-title">${escapeHtml(v.title || '')}</text>
+                    <text class="video-duration">${v.duration || ''}</text>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        bubbleContent = `<text class="msg-content">${escapeHtml(msg.content || '')}</text>`;
+      }
+
+      div.innerHTML = `
+        <div class="message-avatar ${avatarClass}">${avatarIcon}</div>
+        <div class="message-bubble ${bubbleClass}">${bubbleContent}</div>
+      `;
+
+      return div;
+    }
+
+    // 添加加载消息
+    function addLoadingMessage() {
+      const messageList = document.getElementById('messageList');
+      const div = document.createElement('div');
+      div.className = 'message ai-message';
+      div.id = 'loadingMessage';
+      div.innerHTML = `
+        <div class="message-avatar ai-avatar-small">🤖</div>
+        <div class="message-bubble ai-bubble">
+          <div class="loading-indicator">
+            <div class="loading-dots">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      messageList.insertBefore(div, messageList.querySelector('.bottom-placeholder'));
+      scrollToBottom();
+    }
+
+    // 移除加载消息
+    function removeLoadingMessage() {
+      const loading = document.getElementById('loadingMessage');
+      if (loading) {
+        loading.remove();
+      }
+    }
+
+    // 添加 AI 错误消息
+    function addAIErrorMessage(text) {
+      const messageList = document.getElementById('messageList');
+      const div = document.createElement('div');
+      div.className = 'message ai-message';
+      div.innerHTML = `
+        <div class="message-avatar ai-avatar-small">🤖</div>
+        <div class="message-bubble ai-bubble">
+          <text class="msg-content">${escapeHtml(text)}</text>
+        </div>
+      `;
+      messageList.insertBefore(div, messageList.querySelector('.bottom-placeholder'));
+      scrollToBottom();
+    }
+
+    // HTML 转义
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML.replace(/\n/g, '<br>');
+    }
+
+    // 发送快捷问题
+    function sendQuickQuestion(question) {
+      state.inputText = question;
+      document.getElementById('msgInput').value = question;
+      sendMessage();
+    }
+
+    // 选择练习选项（按照源文件的切换逻辑）
+    function selectPracticeOption(msgId, optId) {
+      // 更新消息中的选项状态（切换选中状态）
+      state.messages = state.messages.map(msg => {
+        if (msg.id === msgId && msg.type === 'question') {
+          const options = msg.content.options.map(opt => {
+            if (opt.id === optId) {
+              return { ...opt, selected: !opt.selected };
+            }
+            return opt;
+          });
+          return { ...msg, content: { ...msg.content, options } };
+        }
+        return msg;
+      });
+      
+      // 记录选中的选项
+      state.selectedPracticeOptions[msgId] = optId;
+      
+      renderMessages();
+      scrollToBottom();
+    }
+
+    // 提交练习答案（按照源文件的实现）
+    function submitPractice(msgId) {
+      // 获取选中的选项
+      let selectedOpt = null;
+      state.messages.forEach(msg => {
+        if (msg.id === msgId && msg.type === 'question') {
+          msg.content.options.forEach(opt => {
+            if (opt.selected) {
+              selectedOpt = opt;
+            }
+          });
+        }
+      });
+
+      if (!selectedOpt) {
+        showToast({ title: '请先选择一个答案', icon: 'none' });
+        return;
+      }
+
+      // 更新消息显示
+      state.messages = state.messages.map(msg => {
+        if (msg.id === msgId && msg.type === 'question') {
+          // 标记正确答案
+          const options = msg.content.options.map(opt => ({
+            ...opt,
+            isCorrect: opt.isCorrect
+          }));
+
+          return {
+            ...msg,
+            content: { ...msg.content, options },
+            feedback: selectedOpt.isCorrect
+              ? '回答正确！🎉'
+              : '回答错误，正确答案是 ' + (options.find(o => o.isCorrect) || {}).letter
+          };
+        }
+        return msg;
+      });
+
+      renderMessages();
+      scrollToBottom();
+
+      showToast({
+        title: selectedOpt.isCorrect ? '正确！' : '错误',
+        icon: selectedOpt.isCorrect ? 'success' : 'none'
+      });
+    }
+
+    // 播放推荐视频
+    function playRecommendVideo(videoId) {
+      navigateTo(`video-play.html?videoId=${videoId}`);
+    }
+
+    // 开始练习
+    function startPracticeFromAI() {
+      if (state.videoId) {
+        navigateTo(`quiz-practice.html?videoId=${state.videoId}&title=${encodeURIComponent('AI推荐练习')}`);
+      }
+    }
+
+    // 切换更多选项
+    function toggleMoreOptions() {
+      state.showMoreOptions = !state.showMoreOptions;
+      const moreOptions = document.getElementById('moreOptions');
+      if (state.showMoreOptions) {
+        moreOptions.classList.add('show');
+      } else {
+        moreOptions.classList.remove('show');
+      }
+    }
+
+    // 请求视频总结
+    function requestVideoSummary() {
+      toggleMoreOptions();
+      document.getElementById('msgInput').value = '请总结这节课的内容';
+      state.inputText = '请总结这节课的内容';
+      sendMessage();
+    }
+
+    // 请求知识图谱
+    function requestKnowledgeGraph() {
+      toggleMoreOptions();
+      document.getElementById('msgInput').value = '请给我展示这节课的知识图谱';
+      state.inputText = '请给我展示这节课的知识图谱';
+      sendMessage();
+    }
+
+    // 请求练习题
+    function requestPractice() {
+      toggleMoreOptions();
+      document.getElementById('msgInput').value = '请给我出一道练习题';
+      state.inputText = '请给我出一道练习题';
+      sendMessage();
+    }
+
+    // 请求相关视频
+    function requestRelatedVideos() {
+      toggleMoreOptions();
+      document.getElementById('msgInput').value = '请推荐一些相关视频';
+      state.inputText = '请推荐一些相关视频';
+      sendMessage();
+    }
+
+    // 查看学情报告
+    function viewStudyReport() {
+      toggleMoreOptions();
+      if (state.videoId) {
+        navigateTo(`study-report.html?videoId=${state.videoId}`);
+      }
+    }
+
+    // 清除视频上下文
+    function clearVideoContext() {
+      state.currentVideoContext = '';
+      document.getElementById('videoContext').classList.remove('show');
+    }
+
+    // 滚动到底部
+    function scrollToBottom() {
+      setTimeout(() => {
+        const messageList = document.getElementById('messageList');
+        messageList.scrollTop = messageList.scrollHeight;
+      }, 100);
+    }
+
+    // 格式化时间
+    function formatTime(date) {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

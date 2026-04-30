@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>薄弱点巩固</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f7fa; min-height: 100vh; padding-bottom: 80px; }
+    
+    /* 顶部导航栏 */
+    .nav-bar { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 15px; background: #fff; border-bottom: 1px solid #eee; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+    .nav-back { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .back-icon { font-size: 18px; color: #333; }
+    .nav-title { font-size: 16px; font-weight: 600; color: #333; }
+    .nav-right { width: 30px; }
+    
+    .container { padding-top: 44px; }
+    
+    /* 通用区块 */
+    .section { padding: 0 12px; margin-top: 12px; }
+    
+    .section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #fff; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+    .section-title-row { display: flex; align-items: center; }
+    .section-icon { font-size: 16px; margin-right: 6px; }
+    .section-title { font-size: 15px; font-weight: 600; color: #333; }
+    .section-toggle { font-size: 13px; color: #667eea; }
+    
+    /* 历史薄弱点 */
+    .history-list { background: #fff; border-radius: 8px; overflow: hidden; }
+    .history-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+    .history-item:last-child { border-bottom: none; }
+    .history-main { flex: 1; }
+    .history-name { display: block; font-size: 14px; color: #333; font-weight: 500; margin-bottom: 4px; }
+    .history-mastery { font-size: 12px; color: #ff4d4f; }
+    .history-video { margin-right: 8px; }
+    .video-count { font-size: 11px; color: #1890ff; background: rgba(24, 144, 255, 0.1); padding: 3px 6px; border-radius: 6px; }
+    .history-arrow { font-size: 18px; color: #ccc; }
+    .empty-history { padding: 20px; text-align: center; }
+    .empty-text { font-size: 13px; color: #999; }
+    
+    /* 薄弱点卡片 */
+    .weak-points-list { display: flex; flex-direction: column; gap: 10px; }
+    .weak-point-card { background: #fff; border-radius: 8px; padding: 12px; }
+    .weak-point-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .weak-point-name { font-size: 15px; font-weight: 600; color: #333; }
+    .mastery-badge { padding: 3px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+    .mastery-badge.danger { background: rgba(255, 77, 79, 0.1); color: #ff4d4f; }
+    .mastery-badge.warning { background: rgba(250, 173, 20, 0.1); color: #faad14; }
+    
+    /* 薄弱详情 */
+    .weak-detail { margin-bottom: 8px; }
+    .detail-label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+    .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .detail-tag { font-size: 11px; color: #fa8c16; background: #fff2e8; padding: 3px 8px; border-radius: 6px; }
+    
+    /* 行为模式 */
+    .behavior-pattern { background: #f8f9fa; border-radius: 4px; padding: 6px 8px; margin-bottom: 8px; }
+    .pattern-label { font-size: 12px; color: #1890ff; }
+    .pattern-text { font-size: 12px; color: #666; margin-left: 4px; }
+    
+    /* 推荐学习片段 */
+    .recommended-section { margin-bottom: 8px; }
+    .recommended-label { font-size: 12px; color: #1890ff; display: block; margin-bottom: 6px; }
+    .segment-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .segment-btn { display: flex; align-items: center; padding: 6px 10px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 10px; cursor: pointer; }
+    .segment-time { font-size: 12px; color: #1890ff; }
+    .segment-duration { font-size: 10px; color: #8cc8ff; margin-left: 4px; }
+    
+    /* 推荐视频 */
+    .video-section { margin-bottom: 8px; }
+    .video-label { font-size: 12px; color: #1890ff; display: block; margin-bottom: 6px; }
+    .video-card { display: flex; align-items: center; padding: 8px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px; cursor: pointer; }
+    .video-thumb { width: 50px; height: 35px; border-radius: 4px; background: #ddd; }
+    .video-info { flex: 1; margin-left: 8px; }
+    .video-title { display: block; font-size: 13px; color: #333; margin-bottom: 2px; }
+    .video-duration { font-size: 11px; color: #999; }
+    .play-icon { font-size: 16px; color: #667eea; }
+    
+    /* 操作按钮 */
+    .action-row { display: flex; gap: 8px; margin-top: 8px; }
+    .action-row button { flex: 1; height: 36px; line-height: 36px; border-radius: 18px; font-size: 13px; padding: 0; margin: 0; border: none; cursor: pointer; }
+    .btn-watch { background: #fff; color: #667eea; border: 1px solid #667eea !important; }
+    .btn-practice { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+    
+    /* 空状态 */
+    .empty-state { background: #fff; border-radius: 8px; padding: 30px 20px; text-align: center; }
+    .empty-icon { font-size: 40px; display: block; margin-bottom: 10px; }
+    .empty-title { display: block; font-size: 16px; font-weight: 600; color: #333; margin-bottom: 6px; }
+    .empty-desc { display: block; font-size: 13px; color: #999; }
+    
+    /* AI 助手快捷入口 */
+    .ai-section { position: fixed; bottom: 20px; left: 12px; right: 12px; display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 25px; box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4); cursor: pointer; }
+    .ai-content { display: flex; align-items: center; }
+    .ai-icon { font-size: 20px; margin-right: 8px; }
+    .ai-text { display: flex; flex-direction: column; }
+    .ai-title { font-size: 14px; font-weight: 600; color: #fff; }
+    .ai-desc { font-size: 11px; color: rgba(255,255,255,0.8); }
+    .ai-arrow { font-size: 18px; color: #fff; }
+    
+    /* 加载状态 */
+    .loading-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .loading-mask.hidden { display: none; }
+    .loading-content { background: #fff; border-radius: 8px; padding: 20px 30px; display: flex; flex-direction: column; align-items: center; }
+    .loading-spinner { width: 30px; height: 30px; border: 2px solid #f0f0f0; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: #666; margin-top: 10px; }
+    
+    /* 弹窗 */
+    .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .modal.hidden { display: none; }
+    .modal-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); }
+    .modal-content { position: relative; background: #fff; border-radius: 12px; padding: 20px; max-width: 300px; width: 80%; max-height: 70vh; overflow-y: auto; }
+    .modal-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; text-align: center; }
+    .modal-body { font-size: 14px; color: #666; line-height: 1.6; white-space: pre-wrap; }
+    .modal-footer { margin-top: 15px; text-align: center; }
+    .modal-btn { display: inline-block; padding: 8px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border-radius: 20px; font-size: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部导航栏 -->
+    <div class="nav-bar">
+      <div class="nav-back" id="backBtn">
+        <span class="back-icon">←</span>
+      </div>
+      <span class="nav-title">薄弱点巩固</span>
+      <div class="nav-right"></div>
+    </div>
+
+    <!-- 历史薄弱点记忆区域 -->
+    <div class="section" id="historySection">
+      <div class="section-header" id="toggleHistoryBtn">
+        <div class="section-title-row">
+          <span class="section-icon">📚</span>
+          <span class="section-title">历史薄弱点</span>
+        </div>
+        <span class="section-toggle" id="historyToggle">展开</span>
+      </div>
+
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- 当前练习薄弱点 -->
+    <div class="section" id="currentSection" style="display: none;">
+      <div class="section-title-row">
+        <span class="section-icon">💪</span>
+        <span class="section-title">本次待巩固</span>
+      </div>
+
+      <div class="weak-points-list" id="currentWeakPointsList"></div>
+    </div>
+
+    <!-- 全部薄弱点 -->
+    <div class="section" id="allSection">
+      <div class="section-title-row">
+        <span class="section-icon">📊</span>
+        <span class="section-title">薄弱知识点</span>
+      </div>
+
+      <div class="weak-points-list" id="weakPointsList"></div>
+    </div>
+
+    <!-- AI 助手快捷入口 -->
+    <div class="ai-section" id="aiAssistantBtn">
+      <div class="ai-content">
+        <span class="ai-icon">🤖</span>
+        <div class="ai-text">
+          <span class="ai-title">AI 智能辅导</span>
+          <span class="ai-desc">有疑问？问问 AI 助手</span>
+        </div>
+      </div>
+      <span class="ai-arrow">›</span>
+    </div>
+
+    <!-- 加载状态 -->
+    <div class="loading-mask hidden" id="loadingMask">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <span class="loading-text" id="loadingText">加载中...</span>
+      </div>
+    </div>
+
+    <!-- 解析弹窗 -->
+    <div class="modal hidden" id="explanationModal">
+      <div class="modal-mask" id="modalMask"></div>
+      <div class="modal-content">
+        <div class="modal-title" id="modalTitle">知识点解析</div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+          <span class="modal-btn" id="modalCloseBtn">我知道了</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/utils.js"></script>
+  <script>
+    // 页面状态
+    const state = {
+      historyExpanded: false,
+      historyWeakPoints: [],
+      currentWeakPoints: [],
+      weakPoints: [],
+      knowledgeIds: [],
+      currentPoint: null
+    };
+
+    // 页面加载
+    document.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      
+      // 从URL参数获取knowledgeIds
+      const knowledgeIds = params.get('knowledgeIds');
+      if (knowledgeIds) {
+        state.knowledgeIds = knowledgeIds.split(',');
+      }
+      
+      // 绑定事件
+      bindEvents();
+      
+      // 加载数据
+      loadMockHistory();
+    });
+
+    // 绑定事件
+    function bindEvents() {
+      document.getElementById('backBtn').addEventListener('click', goBack);
+      document.getElementById('toggleHistoryBtn').addEventListener('click', toggleHistory);
+      document.getElementById('aiAssistantBtn').addEventListener('click', openAIAssistant);
+      document.getElementById('modalMask').addEventListener('click', closeModal);
+      document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+    }
+
+    // 加载Mock历史数据
+    function loadMockHistory() {
+      state.historyWeakPoints = [
+        {
+          knowledge_id: 'k1',
+          title: '勾股定理应用',
+          mastery: 45,
+          weak_rate: 55,
+          description: '在实际问题中应用勾股定理解题困难',
+          weakness: ['复杂图形分析', '多步骤计算'],
+          behavior_pattern: ['频繁暂停', '重复观看'],
+          relatedVideos: [
+            { video_id: 101, title: '勾股定理应用技巧', duration: '8:30' },
+            { video_id: 102, title: '勾股定理经典例题', duration: '12:15' }
+          ]
+        },
+        {
+          knowledge_id: 'k2',
+          title: '二次函数顶点',
+          mastery: 52,
+          weak_rate: 48,
+          description: '顶点坐标计算容易出错',
+          weakness: ['公式记错', '符号处理'],
+          behavior_pattern: ['回看视频'],
+          relatedVideos: [
+            { video_id: 201, title: '二次函数顶点精讲', duration: '10:00' }
+          ]
+        },
+        {
+          knowledge_id: 'k3',
+          title: '因式分解技巧',
+          mastery: 38,
+          weak_rate: 62,
+          description: '复杂的因式分解方法掌握不牢',
+          weakness: ['十字相乘法', '分组分解法'],
+          behavior_pattern: ['答题正确率低'],
+          relatedVideos: []
+        }
+      ];
+
+      state.currentWeakPoints = state.historyWeakPoints.filter(p => 
+        state.knowledgeIds.includes(p.knowledge_id)
+      );
+
+      if (state.currentWeakPoints.length === 0 && state.knowledgeIds.length > 0) {
+        state.currentWeakPoints = state.knowledgeIds.map(function(id, index) {
+          return {
+            knowledge_id: id,
+            title: '薄弱知识点 ' + (index + 1),
+            mastery: 50,
+            weakness: ['理解不透彻', '练习不足'],
+            behavior_pattern: ['答题错误'],
+            recommended_segments: [
+              { segment_id: 's1', video_id: 1, start_ms: 120000, end_ms: 200000 }
+            ],
+            relatedVideos: []
+          };
+        });
+      }
+
+      state.weakPoints = state.historyWeakPoints;
+
+      renderUI();
+    }
+
+    // 渲染UI
+    function renderUI() {
+      // 渲染历史列表
+      renderHistoryList();
+      
+      // 渲染当前薄弱点
+      renderCurrentWeakPoints();
+      
+      // 渲染全部薄弱点
+      renderWeakPoints();
+    }
+
+    // 渲染历史列表
+    function renderHistoryList() {
+      const container = document.getElementById('historyList');
+      const points = state.historyWeakPoints;
+      
+      if (points.length === 0) {
+        container.innerHTML = '<div class="empty-history"><span class="empty-text">暂无历史薄弱点记录</span></div>';
+        return;
+      }
+      
+      if (!state.historyExpanded) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+      }
+      
+      container.style.display = 'block';
+      container.innerHTML = points.map(function(item) {
+        return '<div class="history-item" data-index="' + points.indexOf(item) + '">' +
+          '<div class="history-main">' +
+            '<span class="history-name">' + (item.title || item.knowledge_id) + '</span>' +
+            '<span class="history-mastery">掌握度: ' + (item.mastery || item.weak_rate || 50) + '%</span>' +
+          '</div>' +
+          (item.relatedVideos && item.relatedVideos.length > 0 
+            ? '<div class="history-video"><span class="video-count">📹 ' + item.relatedVideos.length + '个讲解视频</span></div>' 
+            : '') +
+          '<span class="history-arrow">›</span>' +
+        '</div>';
+      }).join('');
+      
+      container.querySelectorAll('.history-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+          const index = parseInt(this.getAttribute('data-index'));
+          selectWeakPoint(index);
+        });
+      });
+    }
+
+    // 渲染当前薄弱点
+    function renderCurrentWeakPoints() {
+      const section = document.getElementById('currentSection');
+      const container = document.getElementById('currentWeakPointsList');
+      
+      if (state.currentWeakPoints.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      
+      section.style.display = 'block';
+      container.innerHTML = state.currentWeakPoints.map(function(item, index) {
+        return renderWeakPointCard(item, index, 'current');
+      }).join('');
+      
+      bindWeakPointEvents(container, 'current');
+    }
+
+    // 渲染全部薄弱点
+    function renderWeakPoints() {
+      const container = document.getElementById('weakPointsList');
+      
+      if (state.weakPoints.length === 0) {
+        container.innerHTML = '<div class="empty-state">' +
+          '<span class="empty-icon">🎉</span>' +
+          '<span class="empty-title">太棒了！</span>' +
+          '<span class="empty-desc">你目前没有薄弱知识点，继续保持！</span>' +
+        '</div>';
+        return;
+      }
+      
+      container.innerHTML = state.weakPoints.map(function(item, index) {
+        return renderWeakPointCard(item, index, 'all');
+      }).join('');
+      
+      bindWeakPointEvents(container, 'all');
+    }
+
+    // 渲染薄弱点卡片
+    function renderWeakPointCard(item, index, type) {
+      const mastery = item.mastery || item.weak_rate || 50;
+      const badgeClass = mastery < 50 ? 'danger' : 'warning';
+      
+      const weaknessHtml = item.weakness && item.weakness.length > 0
+        ? '<div class="weak-detail">' +
+            '<span class="detail-label">薄弱原因：</span>' +
+            '<div class="detail-tags">' +
+              item.weakness.map(function(w) { return '<span class="detail-tag">' + w + '</span>'; }).join('') +
+            '</div>' +
+          '</div>'
+        : '';
+      
+      const behaviorHtml = item.behavior_pattern && item.behavior_pattern.length > 0
+        ? '<div class="behavior-pattern">' +
+            '<span class="pattern-label">学习行为：</span>' +
+            '<span class="pattern-text">' + item.behavior_pattern.join('、') + '</span>' +
+          '</div>'
+        : '';
+      
+      const segmentsHtml = item.recommended_segments && item.recommended_segments.length > 0
+        ? '<div class="recommended-section">' +
+            '<span class="recommended-label">📍 推荐学习片段：</span>' +
+            '<div class="segment-list">' +
+              item.recommended_segments.map(function(seg, segIndex) {
+                return '<span class="segment-btn" data-type="' + type + '" data-index="' + index + '" data-segment-index="' + segIndex + '">' +
+                  '<span class="segment-time">' + formatTime(seg.start_ms) + '</span>' +
+                  '<span class="segment-duration">' + formatDuration(seg.end_ms - seg.start_ms) + '</span>' +
+                '</span>';
+              }).join('') +
+            '</div>' +
+          '</div>'
+        : '';
+      
+      const videosHtml = item.relatedVideos && item.relatedVideos.length > 0
+        ? '<div class="video-section">' +
+            '<span class="video-label">📹 相关讲解视频：</span>' +
+            item.relatedVideos.map(function(video) {
+              return '<div class="video-card" data-video=\'' + JSON.stringify(video) + '\'>' +
+                '<div class="video-thumb"></div>' +
+                '<div class="video-info">' +
+                  '<span class="video-title">' + (video.title || '讲解视频') + '</span>' +
+                  '<span class="video-duration">' + (video.duration || '10:00') + '</span>' +
+                '</div>' +
+                '<span class="play-icon">▶</span>' +
+              '</div>';
+            }).join('') +
+          '</div>'
+        : '';
+      
+      return '<div class="weak-point-card">' +
+        '<div class="weak-point-header">' +
+          '<span class="weak-point-name">' + (item.title || item.knowledge_id) + '</span>' +
+          '<span class="mastery-badge ' + badgeClass + '">' + mastery + '%</span>' +
+        '</div>' +
+        weaknessHtml +
+        behaviorHtml +
+        segmentsHtml +
+        videosHtml +
+        '<div class="action-row">' +
+          '<button class="btn-watch" data-type="' + type + '" data-index="' + index + '">📖 查看解析</button>' +
+          '<button class="btn-practice" data-type="' + type + '" data-index="' + index + '">✍️ 开始练习</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    // 绑定薄弱点事件
+    function bindWeakPointEvents(container, type) {
+      var points = type === 'current' ? state.currentWeakPoints : state.weakPoints;
+      
+      container.querySelectorAll('.btn-watch').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var index = parseInt(this.getAttribute('data-index'));
+          watchExplanation(points[index]);
+        });
+      });
+      
+      container.querySelectorAll('.btn-practice').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var index = parseInt(this.getAttribute('data-index'));
+          startPractice(points[index]);
+        });
+      });
+      
+      container.querySelectorAll('.segment-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var index = parseInt(this.getAttribute('data-index'));
+          var segIndex = parseInt(this.getAttribute('data-segment-index'));
+          jumpToSegment(points[index], segIndex);
+        });
+      });
+      
+      container.querySelectorAll('.video-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          var video = JSON.parse(this.getAttribute('data-video'));
+          playVideo(video);
+        });
+      });
+    }
+
+    // 切换历史记录
+    function toggleHistory() {
+      state.historyExpanded = !state.historyExpanded;
+      document.getElementById('historyToggle').textContent = state.historyExpanded ? '收起' : '展开';
+      renderHistoryList();
+    }
+
+    // 选择历史薄弱点
+    function selectWeakPoint(index) {
+      var point = state.historyWeakPoints[index];
+      if (!point) return;
+      startPractice(point);
+    }
+
+    // 查看解析
+    function watchExplanation(point) {
+      if (!point) return;
+      
+      state.currentPoint = point;
+      showLoading('正在获取解析...');
+      
+      // 调用AI接口获取解析
+      API.agent.chat({
+        video_id: 1,
+        knowledge_id: point.knowledge_id,
+        text: '请详细解释' + (point.title || point.knowledge_id) + '这个知识点'
+      }).then(function(res) {
+        hideLoading();
+        if (res.code === 0 && res.data) {
+          showModal(point.title || '知识点解析', res.data.reply || res.data.context || '暂无详细解析');
+        } else {
+          showModal(point.title || '知识点解析', point.description || '该知识点需要加强练习。建议观看相关讲解视频后，再进行练习。');
+        }
+      }).catch(function(err) {
+        hideLoading();
+        showModal(point.title || '知识点解析', point.description || '该知识点需要加强练习。');
+      });
+    }
+
+    // 开始练习
+    function startPractice(point) {
+      if (!point) return;
+      window.location.href = '../quiz-practice/quiz-practice.html?knowledgeId=' + point.knowledge_id + '&title=' + encodeURIComponent(point.title || '薄弱点练习');
+    }
+
+    // 跳转到学习片段
+    function jumpToSegment(point, segIndex) {
+      if (!point || !point.recommended_segments) return;
+      
+      var segment = point.recommended_segments[segIndex];
+      if (!segment) return;
+      
+      var videoId = segment.video_id || 1;
+      var startTime = Math.floor(segment.start_ms / 1000);
+      
+      window.location.href = '../video-play/video-play.html?videoId=' + videoId + '&startTime=' + startTime;
+    }
+
+    // 播放视频
+    function playVideo(video) {
+      if (!video) return;
+      window.location.href = '../video-play/video-play.html?videoId=' + video.video_id;
+    }
+
+    // 打开AI助手
+    function openAIAssistant() {
+      var weakPoints = state.currentWeakPoints.length > 0 ? state.currentWeakPoints : state.historyWeakPoints;
+      var weakTitles = weakPoints.map(function(p) { return p.title || p.knowledge_id; }).join('、');
+      
+      window.location.href = '../ai-chat/ai-chat.html?videoId=1&context=weakness&weakPoints=' + encodeURIComponent(weakTitles);
+    }
+
+    // 返回上一页
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = '../index/index.html';
+      }
+    }
+
+    // 格式化时间
+    function formatTime(ms) {
+      if (!ms) return '0:00';
+      var totalSeconds = Math.floor(ms / 1000);
+      var minutes = Math.floor(totalSeconds / 60);
+      var seconds = totalSeconds % 60;
+      return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+    }
+
+    // 格式化时长
+    function formatDuration(ms) {
+      if (!ms) return '';
+      var totalSeconds = Math.floor(ms / 1000);
+      var minutes = Math.floor(totalSeconds / 60);
+      var seconds = totalSeconds % 60;
+      return minutes + '分' + seconds + '秒';
+    }
+
+    // 显示弹窗
+    function showModal(title, content) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').textContent = content;
+      document.getElementById('explanationModal').classList.remove('hidden');
+    }
+
+    // 关闭弹窗
+    function closeModal() {
+      document.getElementById('explanationModal').classList.add('hidden');
+    }
+
+    // 显示加载
+    function showLoading(text) {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('loadingMask').classList.remove('hidden');
+    }
+
+    // 隐藏加载
+    function hideLoading() {
+      document.getElementById('loadingMask').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

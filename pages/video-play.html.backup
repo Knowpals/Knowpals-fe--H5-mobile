@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>视频学习</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .container { display: flex; flex-direction: column; min-height: 100vh; }
+    
+    /* 导航栏 - 44px 高度适配 */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      background-color: #1a1a1a;
+      color: #fff;
+      padding: 0 15px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+    }
+    .nav-left { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .back-arrow { font-size: 20px; font-weight: bold; }
+    .nav-title { font-size: 16px; font-weight: 500; flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 10px; }
+    .nav-right { width: 30px; }
+    
+    /* 视频区域 - 修复渲染问题 */
+    .video-section { 
+      position: relative; 
+      width: 100%; 
+      background-color: #000; 
+      margin-top: 44px;
+      /* 确保视频容器有适当的高度 */
+      min-height: 200px;
+    }
+    
+    .video-section.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin-top: 0;
+      z-index: 999;
+    }
+    
+    .video-section.fullscreen .video-player {
+      height: 100%;
+    }
+    
+    .video-player { 
+      width: 100%; 
+      height: auto;
+      min-height: 211px;
+      display: block;
+      object-fit: contain;
+      background-color: #000;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* 视频封面 */
+    .video-cover { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 5; }
+    .video-cover.hidden { display: none; }
+    .play-btn-large { width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 25px; color: #333; padding-left: 5px; cursor: pointer; }
+    
+    /* AI悬浮按钮 */
+    .ai-float-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+      z-index: 50;
+      cursor: pointer;
+    }
+    .ai-btn-icon { font-size: 18px; line-height: 1; }
+    .ai-btn-text { font-size: 10px; color: #fff; font-weight: 600; line-height: 1; margin-top: 2px; }
+    
+    /* 视频控制栏 */
+    .video-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      z-index: 10;
+    }
+    .control-btn {
+      width: 30px;
+      height: 30px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      margin: 0 4px;
+      cursor: pointer;
+    }
+    .play-pause-btn { width: 35px; height: 35px; }
+    .play-pause-btn text { font-size: 14px; }
+    .progress-container { flex: 1; margin: 0 8px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+    .progress-track { position: relative; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; cursor: pointer; overflow: visible; }
+    
+    /* 进度条上的互动节点标记 */
+    .progress-node {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      z-index: 2;
+      background-color: #f59e0b;
+      border: 2px solid #fff;
+    }
+    .progress-node.triggered { background-color: #22c55e; }
+    
+    .progress-fill { position: absolute; top: 0; left: 0; height: 100%; background: #8b5cf6; border-radius: 2px; }
+    .progress-thumb { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; background: #8b5cf6; border-radius: 50%; z-index: 3; }
+    .time-display { display: flex; font-size: 10px; color: #fff; margin-top: 4px; }
+    .time-display text { margin: 0 2px; }
+    
+    /* 切片指示器 */
+    .segment-indicator {
+      position: absolute;
+      right: 0;
+      bottom: 100%;
+      margin-bottom: 4px;
+      font-size: 9px;
+      color: rgba(255,255,255,0.8);
+      white-space: nowrap;
+    }
+    
+    .control-right { display: flex; align-items: center; }
+    
+    /* 速度选择器 */
+    .speed-selector {
+      position: absolute;
+      top: 40px;
+      right: 10px;
+      background: rgba(0,0,0,0.9);
+      border-radius: 6px;
+      padding: 5px 0;
+      z-index: 50;
+      opacity: 0;
+      transform: translateY(-5px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+    .speed-selector.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .speed-list { display: flex; flex-direction: column; }
+    .speed-item { padding: 8px 15px; color: #fff; font-size: 13px; text-align: center; cursor: pointer; }
+    .speed-item.active { color: #8b5cf6; }
+    
+    /* 互动开关按钮 */
+    .popup-toggle-btn { font-size: 11px; }
+    .popup-toggle-btn.active { background-color: #8b5cf6; }
+    
+    /* 加载提示 */
+    .loading-tip {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #fff;
+      font-size: 12px;
+    }
+    .loading-tip.hidden { display: none; }
+    .loading-spinner { width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 5px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* 答题区域 */
+    .answer-section { background-color: #fff; margin: 10px; border-radius: 8px; padding: 15px; }
+    .answer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .answer-title { font-size: 16px; font-weight: 600; color: #333; }
+    .teacher-tag { width: 20px; height: 20px; background: #22c55e; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; }
+    .question-box { background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; }
+    .question-text { font-size: 15px; color: #333; line-height: 1.5; }
+    .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+    .option-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .option-item.selected { border-color: #8b5cf6; background: #f3e8ff; }
+    .option-item.correct { border-color: #22c55e; background: #dcfce7; }
+    .option-item.wrong { border-color: #ef4444; background: #fee2e2; }
+    .option-letter { width: 25px; height: 25px; background: #e5e5e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #666; margin-right: 10px; }
+    .option-item.selected .option-letter { background: #8b5cf6; color: #fff; }
+    .option-item.correct .option-letter { background: #22c55e; color: #fff; }
+    .option-item.wrong .option-letter { background: #ef4444; color: #fff; }
+    .option-text { font-size: 14px; color: #333; flex: 1; }
+    
+    /* 答题操作按钮 */
+    .action-buttons { display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; }
+    .btn-retry { padding: 10px 25px; font-size: 14px; color: #ff9500; background: transparent; border: 1px solid #ff9500; border-radius: 25px; cursor: pointer; }
+    .btn-submit { padding: 10px 25px; font-size: 14px; color: #999; background: #e5e5e5; border-radius: 25px; border: none; cursor: pointer; }
+    .btn-submit.active { color: #8b5cf6; background: #f3e8ff; border: 1px solid #8b5cf6; cursor: pointer; }
+    .btn-submit.disabled { pointer-events: none; }
+    
+    /* 答题结果 */
+    .result-tip { padding: 12px; border-radius: 6px; text-align: center; font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .result-tip.success { background: #dcfce7; color: #22c55e; }
+    .result-tip.error { background: #fee2e2; color: #ef4444; }
+    
+    /* 解析区域 */
+    .analysis-box { background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
+    .analysis-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .analysis-text { font-size: 13px; color: #666; line-height: 1.6; }
+    
+    /* 关联视频 */
+    .related-video { margin-bottom: 12px; }
+    .related-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .video-card { display: flex; align-items: center; padding: 10px; background: #f5f5f5; border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
+    .video-thumb { width: 40px; height: 40px; background: #8b5cf6; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; margin-right: 10px; }
+    .video-info { flex: 1; display: flex; flex-direction: column; }
+    .video-name { font-size: 13px; color: #333; margin-bottom: 2px; }
+    .video-duration { font-size: 11px; color: #999; }
+    
+    /* 同类易错题 */
+    .similar-question { margin-bottom: 12px; }
+    .similar-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .similar-item { padding: 10px; background: #fff3e0; border-radius: 6px; margin-bottom: 8px; }
+    .similar-q { font-size: 13px; color: #ff9500; line-height: 1.5; }
+    
+    .next-question-btn {
+      padding: 12px;
+      background: #8b5cf6;
+      color: #fff;
+      border-radius: 25px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    
+    .empty-question { text-align: center; padding: 30px; color: #999; }
+    
+    /* 底部占位 */
+    .bottom-placeholder { height: 25px; }
+    
+    /* 互动确认弹窗 */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-overlay.hidden { display: none; }
+    .popup-box {
+      width: 280px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 25px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .popup-title { font-size: 17px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .popup-desc { font-size: 13px; color: #666; margin-bottom: 20px; text-align: center; }
+    .popup-buttons { display: flex; gap: 15px; width: 100%; }
+    .popup-btn { flex: 1; padding: 12px; border-radius: 25px; text-align: center; font-size: 15px; cursor: pointer; }
+    .popup-btn.cancel { background: #e5e5e5; color: #999; }
+    .popup-btn.confirm { background: #8b5cf6; color: #fff; }
+    
+    /* 答题弹窗 */
+    .quiz-popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 210;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .quiz-popup-overlay.hidden { display: none; }
+    .quiz-popup-box {
+      width: 100%;
+      max-width: 325px;
+      max-height: 85vh;
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      overflow-y: auto;
+    }
+    .quiz-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e5e5e5; }
+    .quiz-popup-title { font-size: 16px; font-weight: 600; color: #333; }
+    .quiz-close-btn { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #999; cursor: pointer; }
+    .quiz-question { font-size: 15px; color: #333; line-height: 1.5; margin-bottom: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .quiz-option { display: flex; align-items: center; padding: 11px; background: #f5f5f5; border-radius: 6px; border: 1px solid transparent; cursor: pointer; }
+    .quiz-option.selected { border-color: #8b5cf6; background: #f3e8ff; }
+    .quiz-option.correct { border-color: #22c55e; background: #dcfce7; }
+    .quiz-option.wrong { border-color: #ef4444; background: #fee2e2; }
+    .quiz-option-letter { width: 24px; height: 24px; background: #e5e5e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #666; margin-right: 8px; }
+    .quiz-option.selected .quiz-option-letter { background: #8b5cf6; color: #fff; }
+    .quiz-option.correct .quiz-option-letter { background: #22c55e; color: #fff; }
+    .quiz-option.wrong .quiz-option-letter { background: #ef4444; color: #fff; }
+    .quiz-option-text { font-size: 13px; color: #333; flex: 1; }
+    
+    .quiz-result { margin-bottom: 10px; }
+    .result-message { padding: 10px; border-radius: 6px; text-align: center; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .result-message.success { background: #dcfce7; color: #22c55e; }
+    .result-message.error { background: #fee2e2; color: #ef4444; }
+    .quiz-analysis { padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px; color: #666; line-height: 1.5; }
+    
+    .quiz-actions { display: flex; justify-content: center; }
+    .quiz-submit-btn { padding: 12px 40px; border-radius: 25px; font-size: 14px; text-align: center; cursor: pointer; }
+    .quiz-submit-btn.active { background: #8b5cf6; color: #fff; }
+    .quiz-submit-btn.disabled { background: #e5e5e5; color: #999; pointer-events: none; }
+    
+    /* 完成遮罩层 */
+    .completion-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .completion-overlay.hidden { display: none; }
+    .completion-box {
+      width: 300px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 30px 25px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .completion-icon { width: 60px; height: 60px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #fff; margin-bottom: 15px; }
+    .completion-title { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .completion-desc { font-size: 13px; color: #666; margin-bottom: 20px; }
+    .completion-stats { display: flex; justify-content: space-around; width: 100%; margin-bottom: 25px; padding: 15px 0; border-top: 1px solid #e5e5e5; border-bottom: 1px solid #e5e5e5; }
+    .stat-item { display: flex; flex-direction: column; align-items: center; }
+    .stat-value { font-size: 20px; font-weight: 600; color: #8b5cf6; margin-bottom: 5px; }
+    .stat-label { font-size: 11px; color: #999; }
+    .completion-actions { display: flex; gap: 10px; width: 100%; }
+    .completion-actions .btn-replay,
+    .completion-actions .btn-analysis,
+    .completion-actions .btn-quiz { flex: 1; padding: 12px 8px; border-radius: 25px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; }
+    .completion-actions .btn-replay { background: #f5f5f5; color: #666; border: 1px solid #e5e5e5; }
+    .completion-actions .btn-analysis { background: #8b5cf6; color: #fff; }
+    .completion-actions .btn-quiz { background: linear-gradient(135deg, #f5576c, #f093fb); color: #fff; }
+    
+    /* 学情报告弹窗 */
+    .report-popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 250;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .report-popup-overlay.hidden { display: none; }
+    .report-popup-box {
+      width: 100%;
+      max-width: 325px;
+      max-height: 85vh;
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .report-title { font-size: 18px; font-weight: 600; color: #333; }
+    .report-close-btn { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #999; cursor: pointer; }
+    
+    .report-score { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+    .score-circle { width: 100px; height: 100px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+    .score-value { font-size: 36px; font-weight: 700; line-height: 1; }
+    .score-label { font-size: 12px; opacity: 0.9; }
+    .score-desc { font-size: 14px; color: #666; margin-top: 10px; }
+    
+    .report-stats { display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #e5e5e5; border-bottom: 1px solid #e5e5e5; margin-bottom: 20px; }
+    .report-stat-item { display: flex; flex-direction: column; align-items: center; }
+    .report-stat-value { font-size: 18px; font-weight: 600; color: #8b5cf6; }
+    .report-stat-label { font-size: 11px; color: #999; margin-top: 4px; }
+    
+    .report-knowledge { margin-bottom: 20px; }
+    .knowledge-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 10px; }
+    .knowledge-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .knowledge-item.mastered { color: #22c55e; }
+    .knowledge-rate { color: #8b5cf6; }
+    
+    .report-suggestions { margin-bottom: 20px; }
+    .suggestions-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .suggestions-text { font-size: 13px; color: #666; line-height: 1.6; }
+    
+    .report-actions { display: flex; justify-content: center; }
+    .report-btn { padding: 12px 40px; background: #8b5cf6; color: #fff; border-radius: 25px; font-size: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+      <div class="nav-left" onclick="goBack()">
+        <span class="back-arrow">←</span>
+      </div>
+      <div class="nav-title" id="videoTitle">加载中...</div>
+      <div class="nav-right"></div>
+    </div>
+    
+    <!-- 视频区域 -->
+    <div class="video-section" id="videoSection">
+      <video id="videoPlayer" class="video-player" src="" playsinline webkit-playsinline x5-video-player-type="h5" x5-video-orientation="landscape"></video>
+      
+      <!-- 播放按钮覆盖层 -->
+      <div class="video-cover" id="videoCover" onclick="tapVideoCover()">
+        <div class="play-btn-large">▶</div>
+      </div>
+      
+      <!-- AI 助手按钮 -->
+      <div class="ai-float-btn" onclick="openAI()">
+        <span class="ai-btn-icon">🤖</span>
+        <span class="ai-btn-text">AI</span>
+      </div>
+      
+      <!-- 自定义视频控制栏 -->
+      <div class="video-controls">
+        <!-- 播放/暂停按钮 -->
+        <div class="control-btn play-pause-btn" onclick="togglePlay()">
+          <span id="playBtnText">▶</span>
+        </div>
+        
+        <!-- 进度条区域 -->
+        <div class="progress-container">
+          <div class="progress-track" id="progressTrack" onclick="tapProgressBar(event)">
+            <!-- 切片结束标记（橙色圆点表示需要答题） -->
+            <div id="interactionNodesContainer"></div>
+            <!-- 播放进度条 -->
+            <div class="progress-fill" id="progressFill"></div>
+            <!-- 进度拖动点 -->
+            <div class="progress-thumb" id="progressThumb"></div>
+          </div>
+          <!-- 时间显示 -->
+          <div class="time-display">
+            <span id="currentTime">00:00</span>
+            <span>/</span>
+            <span id="totalTime">00:00</span>
+          </div>
+          <!-- 当前切片指示 -->
+          <div class="segment-indicator" id="segmentIndicator"></div>
+        </div>
+        
+        <!-- 右侧控制按钮组 -->
+        <div class="control-right">
+          <!-- 播放速度按钮 -->
+          <div class="control-btn speed-btn" id="speedBtn" onclick="toggleSpeedOptions()">
+            <span id="speedText">1.0×</span>
+          </div>
+          
+          <!-- 全屏按钮 -->
+          <div class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
+            <span id="fullscreenText">⛶</span>
+          </div>
+          
+          <!-- 互动开关按钮 -->
+          <div class="control-btn popup-toggle-btn active" id="interactionToggle" onclick="toggleInteraction()">
+            <span>弹</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 播放速度选择面板 -->
+      <div class="speed-selector" id="speedSelector">
+        <div class="speed-list">
+          <div class="speed-item" onclick="selectSpeed('0.5×')">0.5×</div>
+          <div class="speed-item" onclick="selectSpeed('0.75×')">0.75×</div>
+          <div class="speed-item active" onclick="selectSpeed('1.0×')">1.0×</div>
+          <div class="speed-item" onclick="selectSpeed('1.25×')">1.25×</div>
+          <div class="speed-item" onclick="selectSpeed('1.5×')">1.5×</div>
+          <div class="speed-item" onclick="selectSpeed('2.0×')">2.0×</div>
+        </div>
+      </div>
+      
+      <!-- 加载提示 -->
+      <div class="loading-tip" id="loadingTip">
+        <div class="loading-spinner"></div>
+        <span>视频加载中...</span>
+      </div>
+    </div>
+    <div class="answer-section">
+      <!-- 区域标题栏 -->
+      <div class="answer-header">
+        <text class="answer-title">知识点掌握情况</text>
+        <div class="teacher-tag"><text>师</text></div>
+      </div>
+      
+      <!-- 当前问题 -->
+      <div class="question-box">
+        <text class="question-text" id="questionText">正在加载题目...</text>
+      </div>
+      
+      <!-- 选项列表 -->
+      <div class="options-list" id="optionsList">
+        <div class="empty-question" id="emptyQuestion">暂无互动题目</div>
+      </div>
+      
+      <!-- 操作按钮 -->
+      <div class="action-buttons">
+        <div class="btn-retry" onclick="retryQuestion()">再做一题</div>
+        <div class="btn-submit disabled" id="submitBtn" onclick="submitAnswer()">提交答案</div>
+      </div>
+      
+      <!-- 答题结果展示 -->
+      <div class="result-section" id="resultSection" style="display:none;">
+        <div class="result-tip" id="resultTip"></div>
+        
+        <!-- 题目解析 -->
+        <div class="analysis-box" id="analysisBox" style="display:none;">
+          <div class="analysis-title">📖 题目解析</div>
+          <text class="analysis-text" id="analysisText"></text>
+        </div>
+        
+        <!-- 知识点说明 -->
+        <div class="analysis-box" id="knowledgeBox" style="display:none;">
+          <div class="analysis-title">💡 知识点</div>
+          <text class="analysis-text" id="knowledgeText"></text>
+        </div>
+        
+        <!-- 关联视频推荐 -->
+        <div class="related-video" id="relatedVideo" style="display:none;">
+          <div class="related-title">🎬 关联视频</div>
+          <div id="relatedVideoList"></div>
+        </div>
+        
+        <!-- 同类易错题 -->
+        <div class="similar-question" id="similarQuestion" style="display:none;">
+          <div class="similar-title">📝 同类易错题</div>
+          <div id="similarQuestionList"></div>
+        </div>
+        
+        <!-- 下一题按钮 -->
+        <div class="next-question-btn" id="nextQuestionBtn" onclick="nextQuestion()" style="display:none;">下一题 →</div>
+      </div>
+      
+      <!-- 底部空白占位 -->
+      <div class="bottom-placeholder"></div>
+    </div>
+  </div>
+  
+  <!-- 互动确认弹窗 -->
+  <div class="popup-overlay hidden" id="interactionConfirmPopup" onclick="cancelInteraction()">
+    <div class="popup-box" onclick="event.stopPropagation()">
+      <text class="popup-title">是否进行互动?</text>
+      <text class="popup-desc">视频将在互动点暂停，请回答问题</text>
+      <div class="popup-buttons">
+        <div class="popup-btn cancel" onclick="cancelInteraction()">取消</div>
+        <div class="popup-btn confirm" onclick="confirmInteraction()">确认</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 互动答题弹窗 -->
+  <div class="quiz-popup-overlay hidden" id="questionPopup">
+    <div class="quiz-popup-box">
+      <!-- 弹窗顶部 -->
+      <div class="quiz-popup-header">
+        <text class="quiz-popup-title">互动答题</text>
+        <div class="quiz-close-btn" onclick="closeQuestionPopup()">✕</div>
+      </div>
+      
+      <!-- 题目内容 -->
+      <div class="quiz-question" id="popupQuestion"></div>
+      
+      <!-- 选项列表 -->
+      <div class="quiz-options" id="popupOptions"></div>
+      
+      <!-- 答题结果 -->
+      <div class="quiz-result hidden" id="popupResult">
+        <div class="result-message" id="popupResultMessage"></div>
+        <div class="quiz-analysis hidden" id="popupAnalysis"></div>
+      </div>
+      
+      <!-- 提交按钮 -->
+      <div class="quiz-actions">
+        <div class="quiz-submit-btn disabled" id="popupSubmitBtn" onclick="submitPopupAnswer()">提交答案</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 视频完成遮罩层 -->
+  <div class="completion-overlay hidden" id="completionOverlay">
+    <div class="completion-box">
+      <div class="completion-icon">✓</div>
+      <text class="completion-title">视频已播放完成</text>
+      <text class="completion-desc">恭喜您完成了本次视频学习</text>
+      <div class="completion-stats">
+        <div class="stat-item">
+          <text class="stat-value" id="completionRate">0%</text>
+          <text class="stat-label">完成度</text>
+        </div>
+        <div class="stat-item">
+          <text class="stat-value" id="totalQuestions">0</text>
+          <text class="stat-label">答题数</text>
+        </div>
+        <div class="stat-item">
+          <text class="stat-value" id="correctAnswers">0</text>
+          <text class="stat-label">正确数</text>
+        </div>
+      </div>
+      <div class="completion-actions">
+        <div class="btn-replay" onclick="replayVideo()">重新播放</div>
+        <div class="btn-analysis" onclick="goToStudyAnalysis()">查看学情分析</div>
+        <div class="btn-quiz" onclick="goToQuizPractice()">个性练习</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 学情报告弹窗 -->
+  <div class="report-popup-overlay hidden" id="studyReportPopup">
+    <div class="report-popup-box">
+      <div class="report-header">
+        <text class="report-title">📊 学习报告</text>
+        <div class="report-close-btn" onclick="closeStudyReport()">✕</div>
+      </div>
+      
+      <div id="reportContent">
+        <!-- 总体得分 -->
+        <div class="report-score">
+          <div class="score-circle">
+            <text class="score-value" id="reportScore">0</text>
+            <text class="score-label">分</text>
+          </div>
+          <text class="score-desc" id="reportEvaluation">继续加油！</text>
+        </div>
+        
+        <!-- 统计数据 -->
+        <div class="report-stats">
+          <div class="report-stat-item">
+            <text class="report-stat-value" id="reportCompletionRate">0%</text>
+            <text class="report-stat-label">完成度</text>
+          </div>
+          <div class="report-stat-item">
+            <text class="report-stat-value" id="reportWatchTime">0分钟</text>
+            <text class="report-stat-label">学习时长</text>
+          </div>
+          <div class="report-stat-item">
+            <text class="report-stat-value" id="reportCorrectCount">0/0</text>
+            <text class="report-stat-label">正确题数</text>
+          </div>
+        </div>
+        
+        <!-- 知识点掌握 -->
+        <div class="report-knowledge" id="reportKnowledgeSection" style="display:none;">
+          <div class="knowledge-title">知识点掌握</div>
+          <div id="reportKnowledgeList"></div>
+        </div>
+        
+        <!-- 建议 -->
+        <div class="report-suggestions" id="reportSuggestionsSection" style="display:none;">
+          <div class="suggestions-title">💡 学习建议</div>
+          <text class="suggestions-text" id="reportSuggestionsText"></text>
+        </div>
+      </div>
+      
+      <div class="report-actions">
+        <div class="report-btn" onclick="closeStudyReport()">我知道了</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 全局配置 ==========
+    const API_BASE = 'https://knowpals.xyz';
+    
+    // ========== fetchWithAuth 封装 ==========
+    async function fetchWithAuth(url, options = {}) {
+      const token = localStorage.getItem('token') || '';
+      const headers = {
+        'Authorization': token ? `Bearer ${token}` : '',
+        ...(options.headers || {})
+      };
+      
+      // 如果有 body 且不是字符串，转换为 JSON 字符串
+      let body = options.body;
+      if (body && typeof body === 'object' && !(body instanceof String)) {
+        body = JSON.stringify(body);
+        headers['Content-Type'] = 'application/json';
+      }
+      
+      const fullUrl = url.startsWith('http') ? url : API_BASE + url;
+      
+      try {
+        const response = await fetch(fullUrl, {
+          method: options.method || 'GET',
+          headers: headers,
+          body: body,
+          mode: 'cors'
+        });
+        
+        if (response.status === 401 || response.status === 403) {
+          console.error('>>> 认证失败!');
+          return { code: response.status, data: null, msg: '认证失败，请重新登录' };
+        }
+        
+        if (!response.ok) {
+          return { code: response.status, data: null, msg: '请求失败' };
+        }
+        
+        return await response.json();
+      } catch (err) {
+        console.error('>>> 请求失败:', err);
+        return { code: -1, data: null, msg: '网络错误' };
+      }
+    }
+    
+    // ========== 状态管理 ==========
+    let state = {
+      // 视频配置
+      videoSrc: '',
+      videoPoster: '',
+      videoTitle: '加载中...',
+      
+      // 播放控制
+      isPlaying: false,
+      isFullscreen: false,
+      isLoading: false,
+      showPlayBtn: true,
+      showCompletion: false,
+      
+      // 播放进度
+      currentTime: 0,
+      videoDuration: 0,
+      progressPercent: 0,
+      
+      // 互动节点
+      interactionNodes: [],
+      teacherNodes: [],
+      triggeredNodes: [],
+      currentSegmentIndex: -1,
+      
+      // 答题状态
+      currentQuestion: {
+        title: '下列哪项是勾股定理的表达式?',
+        options: [
+          { id: 0, letter: 'A', text: 'a² + b² = c²' },
+          { id: 1, letter: 'B', text: 'a + b = c' },
+          { id: 2, letter: 'C', text: 'a × b = c' },
+          { id: 3, letter: 'D', text: 'a³ + b³ = c³' }
+        ],
+        answerIndex: 0,
+        explanation: '勾股定理是指直角三角形的两条直角边的平方和等于斜边的平方。即 a² + b² = c²。',
+        knowledge: '勾股定理是平面几何中最重要的定理之一。',
+        relatedVideos: [
+          { title: '勾股定理证明', time: '5:30' },
+          { title: '勾股定理应用', time: '8:15' }
+        ],
+        similarQuestions: [
+          '直角三角形两边分别为3和4，斜边长为多少?',
+          '在直角三角形中，一条直角边为5，斜边为13，另一条直角边为多少?'
+        ]
+      },
+      selectedAnswer: null,
+      showAnswerResult: false,
+      isAnswerCorrect: false,
+      hasNextQuestion: false,
+      currentQuestionIndex: 0,
+      
+      // 弹窗
+      showInteractionConfirm: false,
+      showQuestionPopup: false,
+      showSpeedOptions: false,
+      
+      // 播放速度
+      playbackSpeed: '1.0×',
+      speedOptions: ['0.5×', '0.75×', '1.0×', '1.25×', '1.5×', '2.0×'],
+      
+      // 互动控制
+      enableInteraction: true,
+      
+      // 学习记录
+      studyRecord: {
+        videoId: '',
+        startTime: '',
+        endTime: '',
+        watchTime: 0,
+        pauseCount: 0,
+        replayCount: 0,
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        maxPosition: 0,
+        interactionRecords: []
+      },
+      
+      // 已回答的切片列表
+      answeredSegments: []
+    };
+    
+    // 答题计时器
+    let questionStartTime = 0;
+    let recordTimer = null;
+    
+    // DOM元素缓存
+    const video = document.getElementById('videoPlayer');
+    
+    // ========== 工具函数 ==========
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+    
+    function checkLogin() {
+      const token = getToken();
+      if (!token) {
+        // 检查 URL 参数，可能需要先登录
+        alert('请先登录');
+        location.href = 'login.html';
+        return false;
+      }
+      return true;
+    }
+    
+    function getQueryParam(name) {
+      return new URLSearchParams(location.search).get(name);
+    }
+    
+    function formatTime(seconds) {
+      if (seconds > 100000) seconds = seconds / 1000;
+      if (!seconds || isNaN(seconds)) return '00:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    function getCurrentTimeStr() {
+      const now = new Date();
+      return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    }
+    
+    // ========== API 请求 ==========
+    async function fetchWithAuth(url, options = {}) {
+      const token = getToken();
+      if (!token) {
+        // 没有 token，跳转到登录页
+        alert('请先登录');
+        location.href = 'login.html';
+        return null;
+      }
+      
+      const res = await fetch(API_BASE + url, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+      
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('token');
+        alert('登录已过期，请重新登录');
+        location.href = 'login.html';
+        return null;
+      }
+      
+      return res.json();
+    }
+    
+    // ========== 加载视频数据 ==========
+    async function loadVideoData(videoId) {
+      try {
+        setLoading(true);
+        document.getElementById('emptyQuestion').textContent = '正在加载...';
+        
+        const res = await fetchWithAuth(`/api/v1/video/getDetail/${videoId}`);
+        console.log('>>> 视频接口返回:', res);
+        
+        if (!res) {
+          document.getElementById('emptyQuestion').textContent = '请先登录';
+          return;
+        }
+        
+        if ((res.code === 0 || res.code === 200) && res.data) {
+          processVideoData(res.data);
+        } else {
+          document.getElementById('emptyQuestion').textContent = res.msg || '加载视频失败';
+        }
+      } catch (err) {
+        console.error('>>> 加载视频数据失败:', err);
+        document.getElementById('emptyQuestion').textContent = '网络请求失败';
+      }
+      
+      setLoading(false);
+    }
+    
+    // ========== 处理视频数据 ==========
+    function processVideoData(videoData) {
+      console.log('>>> processVideoData 接收到的完整数据:', JSON.stringify(videoData, null, 2));
+      
+      // 处理视频地址
+      state.videoSrc = videoData.url || '';
+      
+      // 处理视频时长
+      let videoDuration = videoData.duration || 0;
+      if (videoDuration < 10000) {
+        videoDuration = videoDuration * 1000;
+      }
+      state.videoDuration = videoDuration;
+      
+      // 处理视频标题
+      state.videoTitle = videoData.title || videoData.name || videoData.video_title || videoData.videoTitle || '视频课程';
+      document.getElementById('videoTitle').textContent = state.videoTitle;
+      document.getElementById('totalTime').textContent = formatTime(videoDuration);
+      
+      // 设置视频源
+      video.src = state.videoSrc;
+      
+      // 转换 segments 为 interactionNodes
+      state.interactionNodes = [];
+      if (videoData.segments && Array.isArray(videoData.segments)) {
+        videoData.segments.forEach((seg, index) => {
+          if (seg.question) {
+            const startMs = seg.start || 0;
+            const endMs = seg.end || (seg.start + 300000);
+            const triggerTimeMs = endMs - 1000;
+            const progressPercent = videoDuration > 0 ? (triggerTimeMs / videoDuration) * 100 : 0;
+            
+            // 处理题目标题
+            const questionTitle = seg.question.content || seg.question.title || seg.question.text || seg.question.question || '题目内容';
+            
+            const nodeData = {
+              id: seg.id || index,
+              segmentId: seg.id,
+              start: startMs,
+              end: endMs,
+              time: triggerTimeMs / 1000,
+              progressPercent: progressPercent,
+              triggered: false,
+              answered: false,
+              question: {
+                id: seg.question.id || seg.id,
+                title: questionTitle,
+                options: formatOptions(seg.question.options),
+                answerIndex: getAnswerIndex(seg.question.options, seg.question.answer),
+                analysis: seg.question.analysis || '',
+                knowledge: seg.question.knowledge || '',
+                relatedVideos: seg.question.relatedVideos || [],
+                similarQuestions: seg.question.similarQuestions || []
+              }
+            };
+            state.interactionNodes.push(nodeData);
+          }
+        });
+      }
+      
+      console.log('>>> 视频信息解析完成:', {
+        videoSrc: state.videoSrc,
+        videoTitle: state.videoTitle,
+        duration: videoDuration + 'ms',
+        interactionNodesCount: state.interactionNodes.length
+      });
+      
+      // 渲染互动节点标记
+      renderInteractionNodes();
+      
+      // 渲染答题区域
+      renderQuestionArea();
+      
+      if (state.interactionNodes.length === 0) {
+        document.getElementById('emptyQuestion').textContent = '暂无互动题目';
+      } else {
+        document.getElementById('emptyQuestion').textContent = `共 ${state.interactionNodes.length} 个知识点`;
+      }
+    }
+    
+    // ========== 渲染互动节点标记 ==========
+    function renderInteractionNodes() {
+      const container = document.getElementById('interactionNodesContainer');
+      container.innerHTML = '';
+      
+      state.interactionNodes.forEach((node, index) => {
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'progress-node' + (node.triggered ? ' triggered' : '');
+        nodeEl.style.left = node.progressPercent + '%';
+        nodeEl.title = formatTime(node.time) + ' 触发答题';
+        container.appendChild(nodeEl);
+      });
+    }
+    
+    // ========== 渲染答题区域 ==========
+    function renderQuestionArea() {
+      if (state.interactionNodes.length === 0) {
+        document.getElementById('emptyQuestion').style.display = 'block';
+        return;
+      }
+      
+      document.getElementById('emptyQuestion').style.display = 'none';
+      
+      // 显示当前题目
+      const q = state.currentQuestion;
+      document.getElementById('questionText').textContent = q.title;
+      
+      // 渲染选项
+      const optionsList = document.getElementById('optionsList');
+      optionsList.innerHTML = q.options.map((opt, i) => `
+        <div class="option-item ${state.selectedAnswer === i ? 'selected' : ''} ${state.showAnswerResult && i === q.answerIndex ? 'correct' : ''} ${state.showAnswerResult && state.selectedAnswer === i && i !== q.answerIndex ? 'wrong' : ''}" onclick="selectAnswer(${i})">
+          <div class="option-letter">${opt.letter}</div>
+          <text class="option-text">${opt.text}</text>
+        </div>
+      `).join('');
+      
+      // 更新提交按钮状态
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.className = 'btn-submit ' + (state.selectedAnswer !== null && !state.showAnswerResult ? 'active' : 'disabled');
+      submitBtn.textContent = state.showAnswerResult ? '已提交' : '提交答案';
+      
+      // 渲染结果区域
+      const resultSection = document.getElementById('resultSection');
+      if (state.showAnswerResult) {
+        resultSection.style.display = 'block';
+        document.getElementById('resultTip').className = 'result-tip ' + (state.isAnswerCorrect ? 'success' : 'error');
+        document.getElementById('resultTip').textContent = state.isAnswerCorrect ? '✓ 回答正确！' : '✗ 回答错误';
+        
+        // 解析
+        const analysisBox = document.getElementById('analysisBox');
+        if (!state.isAnswerCorrect && q.explanation) {
+          analysisBox.style.display = 'block';
+          document.getElementById('analysisText').textContent = q.explanation;
+        } else {
+          analysisBox.style.display = 'none';
+        }
+        
+        // 知识点
+        const knowledgeBox = document.getElementById('knowledgeBox');
+        if (q.knowledge) {
+          knowledgeBox.style.display = 'block';
+          document.getElementById('knowledgeText').textContent = q.knowledge;
+        } else {
+          knowledgeBox.style.display = 'none';
+        }
+        
+        // 关联视频
+        const relatedVideo = document.getElementById('relatedVideo');
+        if (q.relatedVideos && q.relatedVideos.length > 0) {
+          relatedVideo.style.display = 'block';
+          document.getElementById('relatedVideoList').innerHTML = q.relatedVideos.map((v, i) => `
+            <div class="video-card" onclick="playRelatedVideo(${i})">
+              <div class="video-thumb">▶</div>
+              <div class="video-info">
+                <text class="video-name">${v.title}</text>
+                <text class="video-duration">${v.time}</text>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          relatedVideo.style.display = 'none';
+        }
+        
+        // 同类易错题
+        const similarQuestion = document.getElementById('similarQuestion');
+        if (q.similarQuestions && q.similarQuestions.length > 0) {
+          similarQuestion.style.display = 'block';
+          document.getElementById('similarQuestionList').innerHTML = q.similarQuestions.map(sq => `
+            <div class="similar-item">
+              <text class="similar-q">${sq}</text>
+            </div>
+          `).join('');
+        } else {
+          similarQuestion.style.display = 'none';
+        }
+        
+        // 下一题
+        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+        nextQuestionBtn.style.display = state.currentQuestionIndex < state.interactionNodes.length - 1 ? 'block' : 'none';
+      } else {
+        resultSection.style.display = 'none';
+      }
+    }
+    
+    // ========== 格式化选项 ==========
+    function formatOptions(options) {
+      if (!options) return [];
+      if (Array.isArray(options)) {
+        return options.map((opt, i) => {
+          if (typeof opt === 'string') {
+            return { id: i, letter: String.fromCharCode(65 + i), text: opt };
+          }
+          return {
+            id: i,
+            letter: opt.letter || opt.label || String.fromCharCode(65 + i),
+            text: opt.text || opt.option || opt.content || String(opt)
+          };
+        });
+      }
+      return [];
+    }
+    
+    // ========== 获取答案索引 ==========
+    function getAnswerIndex(options, answer) {
+      if (!options || !answer) return 0;
+      
+      const answerStr = String(answer).toUpperCase();
+      
+      if (typeof answer === 'number') return answer;
+      if (/^\d+$/.test(answerStr)) return parseInt(answerStr);
+      
+      for (let i = 0; i < options.length; i++) {
+        const opt = options[i];
+        if (typeof opt === 'string') {
+          if (opt.toUpperCase() === answerStr) return i;
+        } else {
+          if ((opt.label || '').toUpperCase() === answerStr) return i;
+          if ((opt.letter || '').toUpperCase() === answerStr) return i;
+        }
+      }
+      
+      const letterIndex = answerStr.charCodeAt(0) - 65;
+      if (letterIndex >= 0 && letterIndex < options.length) return letterIndex;
+      
+      return 0;
+    }
+    
+    // ========== 视频事件处理 ==========
+    function handleVideoPlay() {
+      state.isPlaying = true;
+      state.showPlayBtn = false;
+      state.isLoading = false;
+      document.getElementById('videoCover').classList.add('hidden');
+      document.getElementById('playBtnText').textContent = '❚❚';
+      setLoading(false);
+      recordAction('play');
+    }
+    
+    function handleVideoPause() {
+      state.isPlaying = false;
+      document.getElementById('playBtnText').textContent = '▶';
+      recordAction('pause');
+      
+      // 如果开启了互动，显示确认弹窗
+      if (state.enableInteraction && !state.showInteractionConfirm && !state.showQuestionPopup) {
+        const currentTimeMs = state.currentTime;
+        let currentSegmentIndex = getCurrentSegmentIndex(currentTimeMs);
+        
+        if (currentSegmentIndex < 0 && state.interactionNodes.length > 0) {
+          for (let i = 0; i < state.interactionNodes.length; i++) {
+            if (state.interactionNodes[i].start > currentTimeMs) {
+              currentSegmentIndex = i;
+              break;
+            }
+          }
+          if (currentSegmentIndex < 0) currentSegmentIndex = 0;
+        }
+        
+        if (currentSegmentIndex >= 0 && currentSegmentIndex < state.interactionNodes.length) {
+          const node = state.interactionNodes[currentSegmentIndex];
+          state.currentQuestionIndex = currentSegmentIndex;
+          state.currentQuestion = node.question;
+          state.selectedAnswer = null;
+          state.showAnswerResult = false;
+          state.isAnswerCorrect = false;
+          showInteractionDialog();
+        }
+      }
+    }
+    
+    function handleTimeUpdate() {
+      const rawTime = video.currentTime;
+      const currentTimeMs = rawTime > 100000 ? rawTime : Math.floor(rawTime * 1000);
+      
+      const rawDuration = video.duration || 0;
+      const durationMs = rawDuration > 100000 ? rawDuration : Math.floor(rawDuration * 1000);
+      
+      const progress = durationMs > 0 ? (currentTimeMs / durationMs) * 100 : 0;
+      const currentSegmentIndex = getCurrentSegmentIndex(currentTimeMs);
+      
+      state.currentTime = currentTimeMs;
+      state.videoDuration = durationMs;
+      state.progressPercent = progress;
+      state.currentSegmentIndex = currentSegmentIndex;
+      
+      // 更新 maxPosition
+      const currentTimeSec = currentTimeMs / 1000;
+      if (currentTimeSec > state.studyRecord.maxPosition) {
+        state.studyRecord.maxPosition = currentTimeSec;
+      }
+      
+      // 更新UI
+      document.getElementById('progressFill').style.width = progress + '%';
+      document.getElementById('progressThumb').style.left = progress + '%';
+      document.getElementById('currentTime').textContent = formatTime(video.currentTime);
+      
+      // 更新切片指示器
+      const segmentIndicator = document.getElementById('segmentIndicator');
+      if (currentSegmentIndex >= 0) {
+        segmentIndicator.textContent = `切片${currentSegmentIndex + 1}/${state.interactionNodes.length + 1}`;
+        segmentIndicator.style.display = 'block';
+      } else {
+        segmentIndicator.style.display = 'none';
+      }
+      
+      // 检查互动节点
+      checkInteractionNodes(currentTimeMs);
+    }
+    
+    function handleVideoEnd() {
+      const completionRate = Math.min(100, Math.round((state.currentTime / state.videoDuration) * 100));
+      
+      state.isPlaying = false;
+      state.showPlayBtn = true;
+      state.showCompletion = true;
+      state.studyRecord.completionRate = completionRate;
+      
+      document.getElementById('playBtnText').textContent = '▶';
+      document.getElementById('completionRate').textContent = completionRate + '%';
+      document.getElementById('totalQuestions').textContent = state.studyRecord.correctAnswers + state.studyRecord.wrongAnswers;
+      document.getElementById('correctAnswers').textContent = state.studyRecord.correctAnswers;
+      document.getElementById('completionOverlay').classList.remove('hidden');
+      
+      recordAction('end');
+      uploadStudyRecordForEnd();
+    }
+    
+    function handleVideoError() {
+      console.log('>>> 视频播放出错');
+      document.getElementById('loadingTip').innerHTML = '<text>视频加载失败</text>';
+    }
+    
+    function handleWaiting() {
+      console.log('>>> 视频缓冲中');
+      setLoading(true);
+    }
+    
+    // ========== 获取当前切片索引 ==========
+    function getCurrentSegmentIndex(currentTimeMs) {
+      for (let i = state.interactionNodes.length - 1; i >= 0; i--) {
+        if (currentTimeMs >= state.interactionNodes[i].start) {
+          return i;
+        }
+      }
+      return -1;
+    }
+    
+    // ========== 检查互动节点 ==========
+    function checkInteractionNodes(currentTimeMs) {
+      for (let i = 0; i < state.interactionNodes.length; i++) {
+        const node = state.interactionNodes[i];
+        const triggerTimeMs = node.time * 1000;
+        const timeDiff = Math.abs(currentTimeMs - triggerTimeMs);
+        
+        if (timeDiff <= 1500 && !node.triggered && !node.answered) {
+          console.log('>>> 触发互动节点:', i, '触发时间:', triggerTimeMs, '当前时间:', currentTimeMs);
+          
+          node.triggered = true;
+          renderInteractionNodes();
+          triggerInteraction(node, i);
+          break;
+        }
+      }
+    }
+    
+    // ========== 触发互动 ==========
+    function triggerInteraction(node, index) {
+      video.pause();
+      
+      const newTriggered = [...state.triggeredNodes, node.id];
+      state.triggeredNodes = newTriggered;
+      state.currentQuestionIndex = index;
+      state.currentQuestion = node.question;
+      
+      // 关键：必须重置所有答题状态，防止显示旧题目的答案
+      state.selectedAnswer = null;
+      state.showAnswerResult = false;
+      state.isAnswerCorrect = false;
+      
+      // 记录触发行为
+      recordBehavior('trigger', {
+        segmentId: node.segmentId,
+        questionId: node.question.id,
+        triggerTime: node.time,
+        segmentEndMs: node.end
+      });
+      
+      // 关键：触发后必须刷新答题区域界面
+      renderQuestionArea();
+      
+      // 开始答题计时
+      startQuestionTimer();
+      
+      if (state.enableInteraction) {
+        console.log('>>> enableInteraction=true, 显示答题弹窗');
+        openQuestionPopup();
+      } else {
+        console.log('>>> enableInteraction=false, 显示确认弹窗');
+        showInteractionDialog();
+      }
+    }
+    
+    // ========== 视频控制函数 ==========
+    function tapVideoCover() {
+      video.play();
+    }
+    
+    function togglePlay() {
+      if (state.isPlaying) {
+        video.pause();
+      } else {
+        video.play();
+      }
+    }
+    
+    function tapProgressBar(e) {
+      if (!video || !state.videoDuration) return;
+      
+      const rect = e.target.getBoundingClientRect();
+      const percent = (e.clientX - rect.left) / rect.width;
+      const seekTime = percent * (state.videoDuration / 1000);
+      video.currentTime = seekTime;
+      
+      recordAction('seek', { to: seekTime * 1000 });
+    }
+    
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        state.isFullscreen = true;
+        document.getElementById('fullscreenText').textContent = '⊗';
+      } else {
+        document.exitFullscreen();
+        state.isFullscreen = false;
+        document.getElementById('fullscreenText').textContent = '⛶';
+      }
+    }
+    
+    function toggleSpeedOptions() {
+      state.showSpeedOptions = !state.showSpeedOptions;
+      const selector = document.getElementById('speedSelector');
+      if (state.showSpeedOptions) {
+        selector.classList.add('show');
+      } else {
+        selector.classList.remove('show');
+      }
+    }
+    
+    function selectSpeed(speed) {
+      state.playbackSpeed = speed;
+      document.getElementById('speedText').textContent = speed;
+      document.getElementById('speedSelector').classList.remove('show');
+      
+      const rate = parseFloat(speed);
+      video.playbackRate = rate;
+      
+      recordAction('change_speed', { speed: rate });
+    }
+    
+    function toggleInteraction() {
+      state.enableInteraction = !state.enableInteraction;
+      const toggle = document.getElementById('interactionToggle');
+      if (state.enableInteraction) {
+        toggle.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+      }
+      
+      alert(state.enableInteraction ? '已开启互动' : '已关闭互动');
+      recordAction('toggle_interaction', { enabled: state.enableInteraction });
+    }
+    
+    function replayVideo() {
+      document.getElementById('completionOverlay').classList.add('hidden');
+      state.showCompletion = false;
+      state.showPlayBtn = false;
+      state.isPlaying = true;
+      state.currentTime = 0;
+      state.progressPercent = 0;
+      
+      video.currentTime = 0;
+      video.play();
+      
+      recordAction('replay');
+    }
+    
+    // ========== 互动确认弹窗 ==========
+    function showInteractionDialog() {
+      state.showInteractionConfirm = true;
+      document.getElementById('interactionConfirmPopup').classList.remove('hidden');
+    }
+    
+    function confirmInteraction() {
+      const currentIndex = state.currentQuestionIndex;
+      state.interactionNodes[currentIndex].triggered = true;
+      
+      state.showInteractionConfirm = false;
+      state.showQuestionPopup = true;
+      
+      // 关键：重置答题状态
+      state.selectedAnswer = null;
+      state.showAnswerResult = false;
+      state.isAnswerCorrect = false;
+      
+      document.getElementById('interactionConfirmPopup').classList.add('hidden');
+      
+      // 刷新答题区域
+      renderQuestionArea();
+      openQuestionPopup();
+    }
+    
+    function cancelInteraction() {
+      const segmentId = state.currentQuestion.segmentId;
+      const currentIndex = state.currentQuestionIndex;
+      
+      state.showInteractionConfirm = false;
+      document.getElementById('interactionConfirmPopup').classList.add('hidden');
+      
+      // 标记该切片为已处理
+      const answeredSegments = [...state.answeredSegments];
+      if (!answeredSegments.includes(segmentId)) {
+        answeredSegments.push(segmentId);
+      }
+      state.answeredSegments = answeredSegments;
+      state.interactionNodes[currentIndex].answered = true;
+      renderInteractionNodes();
+      
+      video.pause();
+      recordAction('interaction_skip');
+    }
+    
+    // ========== 答题弹窗 ==========
+    function openQuestionPopup() {
+      const q = state.currentQuestion;
+      
+      document.getElementById('popupQuestion').textContent = q.title;
+      
+      document.getElementById('popupOptions').innerHTML = q.options.map((opt, i) => `
+        <div class="quiz-option ${state.selectedAnswer === i ? 'selected' : ''} ${state.showAnswerResult && i === q.answerIndex ? 'correct' : ''} ${state.showAnswerResult && state.selectedAnswer === i && i !== q.answerIndex ? 'wrong' : ''}" onclick="selectPopupAnswer(${i})">
+          <div class="quiz-option-letter">${opt.letter}</div>
+          <text class="quiz-option-text">${opt.text}</text>
+        </div>
+      `).join('');
+      
+      const popupResult = document.getElementById('popupResult');
+      if (state.showAnswerResult) {
+        popupResult.classList.remove('hidden');
+        document.getElementById('popupResultMessage').className = 'result-message ' + (state.isAnswerCorrect ? 'success' : 'error');
+        document.getElementById('popupResultMessage').textContent = state.isAnswerCorrect ? '✓ 回答正确！' : '✗ 回答错误，正确答案是 ' + q.options[q.answerIndex].letter;
+        
+        const popupAnalysis = document.getElementById('popupAnalysis');
+        if (!state.isAnswerCorrect && q.explanation) {
+          popupAnalysis.classList.remove('hidden');
+          popupAnalysis.textContent = q.explanation;
+        } else {
+          popupAnalysis.classList.add('hidden');
+        }
+        
+        document.getElementById('popupSubmitBtn').textContent = '已完成';
+        document.getElementById('popupSubmitBtn').className = 'quiz-submit-btn disabled';
+      } else {
+        popupResult.classList.add('hidden');
+        document.getElementById('popupSubmitBtn').textContent = '提交答案';
+        document.getElementById('popupSubmitBtn').className = 'quiz-submit-btn ' + (state.selectedAnswer !== null ? 'active' : 'disabled');
+      }
+      
+      state.showQuestionPopup = true;
+      document.getElementById('questionPopup').classList.remove('hidden');
+    }
+    
+    function selectPopupAnswer(index) {
+      if (state.showAnswerResult) return;
+      state.selectedAnswer = index;
+      openQuestionPopup();
+    }
+    
+    function submitPopupAnswer() {
+      if (state.selectedAnswer === null) {
+        alert('请先选择答案');
+        return;
+      }
+      
+      const timeCost = Date.now() - questionStartTime;
+      state.showAnswerResult = true;
+      state.isAnswerCorrect = state.selectedAnswer === state.currentQuestion.answerIndex;
+      
+      const correctCount = state.studyRecord.correctAnswers;
+      const wrongCount = state.studyRecord.wrongAnswers;
+      state.studyRecord.correctAnswers = state.isAnswerCorrect ? correctCount + 1 : correctCount;
+      state.studyRecord.wrongAnswers = state.isAnswerCorrect ? wrongCount : wrongCount + 1;
+      
+      // 标记切片为已回答
+      const segmentId = state.currentQuestion.segmentId;
+      const currentIndex = state.currentQuestionIndex;
+      const answeredSegments = [...state.answeredSegments];
+      if (!answeredSegments.includes(segmentId)) {
+        answeredSegments.push(segmentId);
+      }
+      state.answeredSegments = answeredSegments;
+      state.interactionNodes[currentIndex].answered = true;
+      renderInteractionNodes();
+      
+      // 记录答题行为
+      recordBehavior('answer', {
+        segmentId: segmentId,
+        questionId: state.currentQuestion.id,
+        selectedAnswer: state.selectedAnswer,
+        correctAnswer: state.currentQuestion.answerIndex,
+        isCorrect: state.isAnswerCorrect,
+        timeCostMs: timeCost
+      });
+      
+      // 提交答案到后端
+      submitAnswerToServer(timeCost);
+      
+      // 刷新界面
+      openQuestionPopup();
+      renderQuestionArea();
+    }
+    
+    function closeQuestionPopup() {
+      const segmentId = state.currentQuestion.segmentId;
+      const currentIndex = state.currentQuestionIndex;
+      
+      const answeredSegments = [...state.answeredSegments];
+      if (!answeredSegments.includes(segmentId)) {
+        answeredSegments.push(segmentId);
+      }
+      state.answeredSegments = answeredSegments;
+      state.interactionNodes[currentIndex].answered = true;
+      renderInteractionNodes();
+      
+      state.showQuestionPopup = false;
+      state.selectedAnswer = null;
+      state.showAnswerResult = false;
+      
+      document.getElementById('questionPopup').classList.add('hidden');
+      video.pause();
+    }
+    
+    // ========== 答题区域函数 ==========
+    function selectAnswer(index) {
+      if (state.showAnswerResult) return;
+      state.selectedAnswer = index;
+      renderQuestionArea();
+    }
+    
+    function submitAnswer() {
+      if (state.selectedAnswer === null) {
+        alert('请先选择答案');
+        return;
+      }
+      
+      const timeCost = Date.now() - questionStartTime;
+      state.showAnswerResult = true;
+      state.isAnswerCorrect = state.selectedAnswer === state.currentQuestion.answerIndex;
+      
+      const correctCount = state.studyRecord.correctAnswers;
+      const wrongCount = state.studyRecord.wrongAnswers;
+      state.studyRecord.correctAnswers = state.isAnswerCorrect ? correctCount + 1 : correctCount;
+      state.studyRecord.wrongAnswers = state.isAnswerCorrect ? wrongCount : wrongCount + 1;
+      
+      // 标记切片为已回答
+      const segmentId = state.currentQuestion.segmentId;
+      const currentIndex = state.currentQuestionIndex;
+      const answeredSegments = [...state.answeredSegments];
+      if (!answeredSegments.includes(segmentId)) {
+        answeredSegments.push(segmentId);
+      }
+      state.answeredSegments = answeredSegments;
+      state.interactionNodes[currentIndex].answered = true;
+      renderInteractionNodes();
+      
+      // 记录答题行为
+      recordBehavior('answer', {
+        segmentId: segmentId,
+        questionId: state.currentQuestion.id,
+        selectedAnswer: state.selectedAnswer,
+        correctAnswer: state.currentQuestion.answerIndex,
+        isCorrect: state.isAnswerCorrect,
+        timeCostMs: timeCost
+      });
+      
+      // 提交答案到后端
+      submitAnswerToServer(timeCost);
+      
+      // 刷新界面
+      renderQuestionArea();
+    }
+    
+    async function submitAnswerToServer(timeCost) {
+      const videoId = state.studyRecord.videoId;
+      const questionId = state.currentQuestion.id;
+      const answerOption = state.currentQuestion.options[state.selectedAnswer];
+      const answerLetter = answerOption.letter || String.fromCharCode(65 + state.selectedAnswer);
+      
+      console.log('>>> 提交答案:', {
+        video_id: videoId,
+        question_id: questionId,
+        answer: answerLetter,
+        time_cost: timeCost
+      });
+      
+      if (videoId && questionId) {
+        try {
+          const res = await fetchWithAuth('/api/v1/question/answer', {
+            method: 'POST',
+            body: JSON.stringify({
+              video_id: videoId,
+              studentanswers: [{
+                question_id: questionId,
+                answer: answerLetter,
+                time_cost: timeCost
+              }]
+            })
+          });
+          
+          console.log('>>> 答案提交成功:', res);
+          // 检查返回的 code 字段
+          if (res && (res.code === 0 || res.code === 200) && res.data && res.data.results && res.data.results[0]) {
+            const result = res.data.results[0];
+            // 更新显示正确的解析
+            if (result.analysis) {
+              state.currentQuestion.explanation = result.analysis;
+              state.currentQuestion.knowledge = result.knowledge || '';
+              renderQuestionArea();
+            }
+          }
+        } catch (err) {
+          console.error('>>> 答案提交失败:', err);
+        }
+      }
+    }
+    
+    function retryQuestion() {
+      state.selectedAnswer = null;
+      state.showAnswerResult = false;
+      state.isAnswerCorrect = false;
+      questionStartTime = Date.now();
+      renderQuestionArea();
+    }
+    
+    function nextQuestion() {
+      const nextIndex = state.currentQuestionIndex + 1;
+      
+      if (nextIndex < state.interactionNodes.length) {
+        const nextNode = state.interactionNodes[nextIndex];
+        state.currentQuestionIndex = nextIndex;
+        state.currentQuestion = nextNode.question;
+        state.selectedAnswer = null;
+        state.showAnswerResult = false;
+        state.isAnswerCorrect = false;
+        questionStartTime = Date.now();
+        renderQuestionArea();
+      }
+    }
+    
+    function playRelatedVideo(index) {
+      const videoInfo = state.currentQuestion.relatedVideos[index];
+      alert('准备播放: ' + videoInfo.title);
+    }
+    
+    // ========== 学习报告 ==========
+    function showStudyReport(report) {
+      console.log('>>> 收到学情报告:', report);
+      
+      document.getElementById('reportScore').textContent = report.score || 0;
+      document.getElementById('reportEvaluation').textContent = report.evaluation || '继续加油！';
+      document.getElementById('reportCompletionRate').textContent = (report.completion_rate || 0) + '%';
+      document.getElementById('reportWatchTime').textContent = (report.watch_time || 0) + '分钟';
+      document.getElementById('reportCorrectCount').textContent = (report.correct_count || 0) + '/' + (report.total_questions || 0);
+      
+      const knowledgeSection = document.getElementById('reportKnowledgeSection');
+      if (report.knowledge_mastery && report.knowledge_mastery.length > 0) {
+        knowledgeSection.style.display = 'block';
+        document.getElementById('reportKnowledgeList').innerHTML = report.knowledge_mastery.map(item => `
+          <div class="knowledge-item ${item.mastered ? 'mastered' : ''}">
+            <text>${item.name}</text>
+            <text class="knowledge-rate">${item.rate || 0}%</text>
+          </div>
+        `).join('');
+      } else {
+        knowledgeSection.style.display = 'none';
+      }
+      
+      const suggestionsSection = document.getElementById('reportSuggestionsSection');
+      if (report.suggestions) {
+        suggestionsSection.style.display = 'block';
+        document.getElementById('reportSuggestionsText').textContent = report.suggestions;
+      } else {
+        suggestionsSection.style.display = 'none';
+      }
+      
+      document.getElementById('studyReportPopup').classList.remove('hidden');
+    }
+    
+    function closeStudyReport() {
+      document.getElementById('studyReportPopup').classList.add('hidden');
+    }
+    
+    async function loadStudyReport() {
+      const videoId = state.studyRecord.videoId;
+      
+      if (!videoId) return;
+      
+      try {
+        const res = await fetchWithAuth(`/api/v1/stat/student/${videoId}`);
+        console.log('>>> 学情报告:', res);
+        if (res && (res.code === 0 || res.code === 200) && res.data) {
+          showStudyReport(res.data);
+        }
+      } catch (err) {
+        console.error('>>> 加载学情报告失败:', err);
+      }
+    }
+    
+    // ========== 页面跳转 ==========
+    function openAI() {
+      if (state.isPlaying) {
+        video.pause();
+      }
+      
+      const currentTime = formatTime(video.currentTime);
+      location.href = `ai-chat.html?videoId=${state.studyRecord.videoId}&videoTitle=${encodeURIComponent(state.videoTitle)}&currentTime=${encodeURIComponent(currentTime)}&videoDuration=${state.videoDuration}`;
+    }
+    
+    function goToStudyAnalysis() {
+      document.getElementById('completionOverlay').classList.add('hidden');
+      location.href = `study-data.html?videoId=${state.studyRecord.videoId}&videoTitle=${encodeURIComponent(state.videoTitle)}&classId=${state.studyRecord.classId || ''}`;
+    }
+    
+    function goToQuizPractice() {
+      document.getElementById('completionOverlay').classList.add('hidden');
+      location.href = `weak-points.html?videoId=${state.studyRecord.videoId}&videoTitle=${encodeURIComponent(state.videoTitle)}`;
+    }
+    
+    function goBack() {
+      const videoId = state.studyRecord.videoId;
+      if (!videoId) {
+        history.back();
+        return;
+      }
+      
+      // 如果有播放记录，先查询学情确认状态，再决定是否上传
+      if (video.currentTime > 0) {
+        // 先检查本地缓存
+        const completedVideos = JSON.parse(localStorage.getItem('completed_videos') || '[]');
+        const vid = parseInt(videoId);
+        
+        // 查询学情检查状态
+        fetchWithAuth(`/api/v1/stat/student?video_id=${videoId}`)
+          .then(statRes => {
+            const status = statRes?.data?.status;
+            if (status === 'finished') {
+              console.log('>>> 返回时接口标记已完成（status=finished），跳过上传进度');
+              // 同步本地缓存
+              if (!completedVideos.includes(vid)) {
+                completedVideos.push(vid);
+                localStorage.setItem('completed_videos', JSON.stringify(completedVideos));
+              }
+            } else {
+              console.log('>>> 返回时接口标记未完成，上传进度');
+              const currentSec = Math.floor(video.currentTime);
+              fetchWithAuth('/api/v1/behavior/update-progress', {
+                method: 'POST',
+                body: JSON.stringify({
+                  video_id: videoId,
+                  current_sec: currentSec
+                })
+              }).catch(() => {});
+            }
+            history.back();
+          })
+          .catch(() => {
+            // 接口查询失败，也尝试上传进度（保守策略）
+            const currentSec = Math.floor(video.currentTime);
+            fetchWithAuth('/api/v1/behavior/update-progress', {
+              method: 'POST',
+              body: JSON.stringify({
+                video_id: videoId,
+                current_sec: currentSec
+              })
+            }).catch(() => {});
+            history.back();
+          });
+      } else {
+        history.back();
+      }
+    }
+    
+    // ========== 行为记录 ==========
+    function recordAction(action, data = {}) {
+      const videoId = state.studyRecord.videoId;
+      if (!videoId) return;
+      
+      const currentSec = Math.floor(state.currentTime / 1000);
+      const currentSegmentIndex = getCurrentSegmentIndex(state.currentTime);
+      const segmentId = currentSegmentIndex >= 0 ? state.interactionNodes[currentSegmentIndex].segmentId : 0;
+      
+      const record = {
+        action: action,
+        time: getCurrentTimeStr(),
+        videoTimeMs: state.currentTime,
+        videoTimeSec: currentSec,
+        ...data
+      };
+      
+      state.studyRecord.interactionRecords.push(record);
+      
+      if ((action === 'pause' || action === 'replay') && videoId) {
+        fetchWithAuth('/api/v1/behavior/record', {
+          method: 'POST',
+          body: JSON.stringify({
+            video_id: videoId,
+            segment_id: segmentId,
+            event: action,
+            duration: state.currentTime
+          })
+        }).catch(err => console.error('>>> 行为记录失败:', err));
+        
+        uploadStudyRecord();
+      }
+      
+      if (action === 'pause') {
+        state.studyRecord.pauseCount++;
+      }
+      
+      if (action === 'replay') {
+        state.studyRecord.replayCount++;
+      }
+    }
+    
+    function recordBehavior(type, data) {
+      if (!state.behaviorRecords) state.behaviorRecords = [];
+      
+      const record = {
+        type: type,
+        timestamp: Date.now(),
+        videoTimeMs: state.currentTime,
+        ...data
+      };
+      
+      state.behaviorRecords.push(record);
+      console.log('>>> 行为记录:', record);
+    }
+    
+    function startQuestionTimer() {
+      questionStartTime = Date.now();
+    }
+    
+    // 上传学习记录（带本地缓存检查）
+    async function uploadStudyRecord() {
+      const record = state.studyRecord;
+      if (!record.videoId) return;
+      
+      // 先检查本地缓存，如果已完成则跳过上传
+      const completedVideos = JSON.parse(localStorage.getItem('completed_videos') || '[]');
+      const videoId = parseInt(record.videoId);
+      if (completedVideos.includes(videoId)) {
+        console.log('>>> 视频已完成（本地缓存），跳过上传进度');
+        return;
+      }
+      
+      try {
+        // 查询学情，检查视频状态
+        const statRes = await fetchWithAuth(`/api/v1/stat/student?video_id=${record.videoId}`);
+        const status = statRes?.data?.status;
+        if (status === 'finished') {
+          console.log('>>> 视频已完成（status=finished），跳过上传进度');
+          // 标记到本地缓存
+          if (!completedVideos.includes(videoId)) {
+            completedVideos.push(videoId);
+            localStorage.setItem('completed_videos', JSON.stringify(completedVideos));
+          }
+          return;
+        }
+        
+        // 未完成，上传进度
+        const videoTimeMs = state.currentTime;
+        await fetchWithAuth('/api/v1/behavior/update-progress', {
+          method: 'POST',
+          body: JSON.stringify({
+            video_id: record.videoId,
+            current_sec: Math.floor(videoTimeMs)
+          })
+        });
+      } catch (err) {
+        // 查询失败时也上传进度（保守策略）
+        console.error('>>> 查询学情失败，上传进度:', err);
+        const videoTimeMs = state.currentTime;
+        await fetchWithAuth('/api/v1/behavior/update-progress', {
+          method: 'POST',
+          body: JSON.stringify({
+            video_id: record.videoId,
+            current_sec: Math.floor(videoTimeMs)
+          })
+        }).catch(() => {});
+      }
+    }
+    
+    // 视频结束时上传进度
+    async function uploadStudyRecordForEnd() {
+      const videoId = state.studyRecord.videoId;
+      if (!videoId) return;
+      
+      try {
+        // 先检查本地缓存
+        const completedVideos = JSON.parse(localStorage.getItem('completed_videos') || '[]');
+        const vid = parseInt(videoId);
+        if (completedVideos.includes(vid)) {
+          console.log('>>> 视频已完成（本地缓存），跳过上传进度');
+          loadStudyReport();
+          return;
+        }
+        
+        // 查询学情
+        const statRes = await fetchWithAuth(`/api/v1/stat/student?video_id=${videoId}`);
+        const status = statRes?.data?.status;
+        if (status === 'finished') {
+          console.log('>>> 视频已完成（status=finished）');
+          if (!completedVideos.includes(vid)) {
+            completedVideos.push(vid);
+            localStorage.setItem('completed_videos', JSON.stringify(completedVideos));
+          }
+        }
+        
+        // 上传完成进度
+        await fetchWithAuth('/api/v1/behavior/update-progress', {
+          method: 'POST',
+          body: JSON.stringify({
+            video_id: videoId,
+            current_sec: Math.floor(state.videoDuration / 1000)
+          })
+        });
+        
+        // 标记为已完成
+        if (!completedVideos.includes(vid)) {
+          completedVideos.push(vid);
+          localStorage.setItem('completed_videos', JSON.stringify(completedVideos));
+        }
+      } catch (err) {
+        console.error('>>> 结束上传失败:', err);
+      }
+      
+      loadStudyReport();
+    }
+    
+    function setLoading(show) {
+      state.isLoading = show;
+      const loadingTip = document.getElementById('loadingTip');
+      if (show) {
+        loadingTip.classList.remove('hidden');
+      } else {
+        loadingTip.classList.add('hidden');
+      }
+    }
+    
+    // ========== 初始化 ==========
+    function init() {
+      if (!checkLogin()) return;
+      
+      const rawVideoId = getQueryParam('videoId') || getQueryParam('video_id') || '0';
+      const videoId = parseInt(rawVideoId);
+      const classId = getQueryParam('classId') || '';
+      
+      console.log('>>> video-play 页面参数: videoId =', rawVideoId, '=> 解析后:', videoId);
+      
+      if (!videoId || videoId <= 0) {
+        alert('视频ID无效');
+        setTimeout(() => history.back(), 1500);
+        return;
+      }
+      
+      const now = getCurrentTimeStr();
+      state.studyRecord = {
+        videoId: videoId,
+        classId: classId,
+        startTime: now,
+        endTime: '',
+        watchTime: 0,
+        pauseCount: 0,
+        replayCount: 0,
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        maxPosition: 0,
+        interactionRecords: []
+      };
+      
+      const title = getQueryParam('courseTitle') || getQueryParam('videoTitle') || '视频学习';
+      document.getElementById('videoTitle').textContent = decodeURIComponent(title);
+      state.videoTitle = decodeURIComponent(title);
+      
+      loadVideoData(videoId);
+      
+      startRecordTimer();
+    }
+    
+    function startRecordTimer() {
+      recordTimer = setInterval(() => {
+        if (state.isPlaying) {
+          state.studyRecord.watchTime++;
+        }
+      }, 1000);
+    }
+    
+    // ========== 视频事件监听 ==========
+    video.addEventListener('play', handleVideoPlay);
+    video.addEventListener('pause', handleVideoPause);
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('ended', handleVideoEnd);
+    video.addEventListener('error', handleVideoError);
+    video.addEventListener('waiting', handleWaiting);
+    video.addEventListener('canplay', () => setLoading(false));
+    
+    // 页面卸载时清理
+    window.addEventListener('beforeunload', () => {
+      if (recordTimer) clearInterval(recordTimer);
+      uploadStudyRecord();
+    });
+    
+    // 启动
+    init();
+  </script>
+</body>
+</html>

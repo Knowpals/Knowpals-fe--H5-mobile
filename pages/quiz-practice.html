@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>知伴AI - 个性化练习</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f7fa; }
+    
+    .container { min-height: 100vh; padding-bottom: 20px; }
+    
+    /* 顶部导航 */
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 15px 20px;
+      color: #fff;
+      position: relative;
+    }
+    .header-content { display: flex; align-items: center; justify-content: space-between; }
+    .back-btn { font-size: 28px; padding: 10px; cursor: pointer; }
+    .header-title { font-size: 18px; font-weight: bold; flex: 1; text-align: center; }
+    .header-right { width: 40px; }
+    
+    /* 进度条 */
+    .progress-bar {
+      background: rgba(255,255,255,0.3);
+      height: 4px;
+      border-radius: 2px;
+      margin-top: 15px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      background: #fff;
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+    .progress-text { font-size: 12px; opacity: 0.9; margin-top: 8px; text-align: center; }
+    
+    /* 题目卡片 */
+    .quiz-card {
+      background-color: #fff;
+      margin: 15px;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .quiz-type { padding: 5px 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border-radius: 15px; font-size: 12px; }
+    .quiz-number { font-size: 13px; color: #999; }
+    .quiz-question { font-size: 16px; color: #333; line-height: 1.6; margin-bottom: 25px; }
+    
+    /* 选项列表 */
+    .options-list { display: flex; flex-direction: column; gap: 12px; }
+    .option-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border: 2px solid #f0f0f0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .option-item:active { background-color: #f5f5f5; }
+    .option-item.selected { border-color: #667eea; background-color: rgba(102, 126, 234, 0.1); }
+    .option-item.correct { border-color: #43e97b; background-color: rgba(67, 233, 123, 0.1); }
+    .option-item.wrong { border-color: #f5576c; background-color: rgba(245, 87, 108, 0.1); }
+    .option-letter {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #666;
+      margin-right: 12px;
+    }
+    .option-item.selected .option-letter { background-color: #667eea; color: #fff; }
+    .option-item.correct .option-letter { background-color: #43e97b; color: #fff; }
+    .option-item.wrong .option-letter { background-color: #f5576c; color: #fff; }
+    .option-text { flex: 1; font-size: 15px; color: #333; }
+    
+    /* 底部区域 */
+    .quiz-footer { margin-top: 25px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
+    .hint-text { font-size: 13px; color: #999; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+    
+    /* 提交按钮 */
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+    .next-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 15px rgba(67, 233, 123, 0.3);
+    }
+    
+    /* 解析区域 */
+    .analysis-box {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+    .analysis-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .analysis-text { font-size: 14px; color: #666; line-height: 1.6; }
+    
+    /* 结果弹窗 */
+    .result-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .result-content {
+      background: #fff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 360px;
+      padding: 30px;
+      text-align: center;
+    }
+    .result-icon { font-size: 80px; margin-bottom: 20px; }
+    .result-title { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 10px; }
+    .result-score { font-size: 48px; font-weight: bold; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; }
+    .result-comment { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 25px; }
+    .result-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      margin-bottom: 10px;
+    }
+    .result-btn-secondary {
+      background: transparent;
+      color: #667eea;
+      border: 1px solid #667eea;
+    }
+    
+    /* 加载状态 */
+    .loading { text-align: center; padding: 50px; color: #666; }
+    .loading-icon { font-size: 50px; margin-bottom: 20px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 50px 15px; }
+    .empty-icon { font-size: 60px; margin-bottom: 15px; }
+    .empty-title { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .empty-text { font-size: 14px; color: #999; }
+    
+    /* Loading 遮罩 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .loading-content {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .loading-text { font-size: 14px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部导航 -->
+    <div class="header">
+      <div class="header-content">
+        <div class="back-btn" onclick="goBack()">‹</div>
+        <text class="header-title">个性化练习</text>
+        <div class="header-right"></div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">0 / 0</div>
+    </div>
+
+    <!-- 题目内容 -->
+    <div id="quizContent">
+      <div class="loading">
+        <div class="loading-icon">📝</div>
+        <div>正在生成个性化练习...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果弹窗 -->
+  <div class="result-overlay" id="resultOverlay" style="display:none;">
+    <div class="result-content">
+      <div class="result-icon" id="resultIcon">🎉</div>
+      <div class="result-title" id="resultTitle">练习完成</div>
+      <div class="result-score" id="resultScore">0/0</div>
+      <div class="result-comment" id="resultComment"></div>
+      <button class="result-btn" onclick="goToStudyData()">查看学情报告</button>
+      <button class="result-btn result-btn-secondary" onclick="backToStudy()">返回学习</button>
+    </div>
+  </div>
+
+  <script>
+    // ========== 全局配置 ==========
+    const API_BASE = 'https://knowpals.xyz';
+    
+    // ========== 状态管理 ==========
+    let videoId = null;
+    let knowledgeId = null;
+    let questions = [];
+    let currentIndex = 0;
+    let selectedIndex = -1;
+    let hasSelected = false;
+    let answers = [];
+    let correctCount = 0;
+    let showResult = false;
+    
+    // ========== 工具函数 ==========
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+    
+    function checkLogin() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = 'login.html';
+        return false;
+      }
+      return true;
+    }
+    
+    function getQueryParam(name) {
+      return new URLSearchParams(location.search).get(name);
+    }
+    
+    function goBack() {
+      window.history.back();
+    }
+    
+    function showLoading(text) {
+      const overlay = document.getElementById('loadingOverlay') || createLoadingOverlay();
+      document.getElementById('loadingText').textContent = text || '加载中...';
+      overlay.style.display = 'flex';
+    }
+    
+    function hideLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+    
+    function createLoadingOverlay() {
+      const overlay = document.createElement('div');
+      overlay.id = 'loadingOverlay';
+      overlay.className = 'loading-overlay';
+      overlay.innerHTML = `
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <div id="loadingText" class="loading-text">加载中...</div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      return overlay;
+    }
+    
+    function getQuestionTypeText(type) {
+      const typeMap = {
+        'choice': '单选题',
+        'multiple': '多选题',
+        'fill': '填空题',
+        'judge': '判断题'
+      };
+      return typeMap[type] || '单选题';
+    }
+    
+    function getResultComment(correct, total) {
+      const rate = correct / total;
+      if (rate >= 1) return '太棒了！全部正确，继续保持！';
+      if (rate >= 0.8) return '很不错！基本掌握，可以针对错题进行巩固。';
+      if (rate >= 0.6) return '还需努力！建议观看薄弱点的讲解视频。';
+      return '建议重新学习相关知识点，再做练习。';
+    }
+    
+    // ========== API 请求 ==========
+    async function fetchWithAuth(url, options = {}) {
+      const token = getToken();
+      const res = await fetch(API_BASE + url, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+      
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+        return null;
+      }
+      
+      return res.json();
+    }
+    
+    // ========== 加载题目 ==========
+    async function loadQuestions() {
+      const container = document.getElementById('quizContent');
+      
+      // 如果有 videoId 和 knowledgeId，调用AI生成习题
+      if (videoId && knowledgeId) {
+        await loadQuestionsBySegment();
+        return;
+      }
+      
+      // 只有 videoId 时，调用AI接口生成习题（基于视频的薄弱点生成）
+      if (videoId) {
+        console.log('>>> 只有 videoId，调用 AI 生成习题');
+        container.innerHTML = `
+          <div class="loading">
+            <div class="loading-icon">📝</div>
+            <div>正在生成个性化练习...</div>
+          </div>
+        `;
+        
+        const params = {
+          video_id: String(videoId),
+          num_questions: 5
+        };
+        
+        console.log('>>> 发送生成习题请求:', JSON.stringify(params));
+        console.log('>>> 接口地址: POST /api/v1/agent/quiz');
+        
+        try {
+          const res = await fetchWithAuth('/api/v1/agent/quiz', {
+            method: 'POST',
+            body: JSON.stringify(params)
+          });
+          
+          console.log('>>> agent.generateQuiz 返回:', JSON.stringify(res, null, 2));
+          
+          if ((res.code === 0 || res.code === 200) && res.data && res.data.quizzes && res.data.quizzes.length > 0) {
+            console.log('>>> 获取到习题数量:', res.data.quizzes.length);
+            processQuestions(res.data.quizzes);
+          } else {
+            console.warn('>>> 接口返回空数据或格式不对，使用 Mock 数据');
+            console.log('>>> 接口返回详情: code=', res.code, 'msg=', res.msg);
+            loadMockQuestions();
+          }
+        } catch (err) {
+          console.error('>>> 加载习题失败:', JSON.stringify(err));
+          loadMockQuestions();
+        }
+        return;
+      }
+      
+      // 否则使用Mock数据
+      loadMockQuestions();
+    }
+    
+    async function loadQuestionsBySegment() {
+      const container = document.getElementById('quizContent');
+      container.innerHTML = `
+        <div class="loading">
+          <div class="loading-icon">📝</div>
+          <div>正在生成个性化练习...</div>
+        </div>
+      `;
+      
+      const params = {
+        video_id: String(videoId),
+        num_questions: 5
+      };
+      
+      console.log('>>> 发送生成习题请求:', JSON.stringify(params));
+      console.log('>>> 接口地址: POST /api/v1/agent/quiz');
+      
+      try {
+        const res = await fetchWithAuth('/api/v1/agent/quiz', {
+          method: 'POST',
+          body: JSON.stringify(params)
+        });
+        
+        console.log('>>> agent.generateQuiz 返回:', JSON.stringify(res, null, 2));
+        
+        if ((res.code === 0 || res.code === 200) && res.data && res.data.quizzes && res.data.quizzes.length > 0) {
+          console.log('>>> 获取到习题数量:', res.data.quizzes.length);
+          processQuestions(res.data.quizzes);
+        } else {
+          console.warn('>>> 接口返回空数据，使用 Mock 数据');
+          loadMockQuestions();
+        }
+      } catch (err) {
+        console.error('>>> 生成习题失败:', JSON.stringify(err));
+        loadMockQuestions();
+      }
+    }
+    
+    // ========== 处理题目 ==========
+    function processQuestions(quizzes) {
+      questions = quizzes.map((quiz, index) => {
+        let options = quiz.options || [];
+        
+        // 判断题
+        if (quiz.type === 'judge') {
+          options = [
+            { letter: 'A', text: '对' },
+            { letter: 'B', text: '错' }
+          ];
+        } else if (Array.isArray(options)) {
+          options = options.map((opt, i) => {
+            if (typeof opt === 'string') {
+              return { letter: String.fromCharCode(65 + i), text: opt };
+            }
+            return { letter: opt.letter || String.fromCharCode(65 + i), text: opt.text || opt };
+          });
+        }
+        
+        return {
+          id: (quiz.knowledge_id || 'q') + '_' + index,
+          knowledge_id: quiz.knowledge_id,
+          question: quiz.question,
+          type: quiz.type || 'choice',
+          difficulty: quiz.difficulty,
+          options: options,
+          answer: quiz.answer,
+          analysis: quiz.analysis
+        };
+      });
+      
+      currentIndex = 0;
+      answers = [];
+      correctCount = 0;
+      renderQuestion();
+    }
+    
+    // ========== Mock 题目 ==========
+    function loadMockQuestions() {
+      const mockQuestions = [
+        {
+          id: 'q1',
+          knowledge_id: '勾股定理',
+          question: '已知直角三角形的两直角边分别为3和4，则斜边的长度为多少？',
+          type: 'choice',
+          options: [
+            { letter: 'A', text: '5' },
+            { letter: 'B', text: '6' },
+            { letter: 'C', text: '7' },
+            { letter: 'D', text: '8' }
+          ],
+          answer: 'A',
+          analysis: '根据勾股定理，a² + b² = c²，即 3² + 4² = 9 + 16 = 25，所以 c = 5。'
+        },
+        {
+          id: 'q2',
+          knowledge_id: '勾股定理',
+          question: '下列哪组数可以作为直角三角形的三边长？',
+          type: 'choice',
+          options: [
+            { letter: 'A', text: '3, 4, 6' },
+            { letter: 'B', text: '5, 12, 13' },
+            { letter: 'C', text: '7, 24, 25' },
+            { letter: 'D', text: '8, 15, 17' }
+          ],
+          answer: 'B',
+          analysis: '勾股数必须满足 a² + b² = c²。5² + 12² = 25 + 144 = 169 = 13²，所以 B 正确。'
+        },
+        {
+          id: 'q3',
+          knowledge_id: '勾股定理应用',
+          question: '一个等腰三角形的底边长为6，腰长为5，求这个三角形的高？',
+          type: 'choice',
+          options: [
+            { letter: 'A', text: '3' },
+            { letter: 'B', text: '4' },
+            { letter: 'C', text: '5' },
+            { letter: 'D', text: '6' }
+          ],
+          answer: 'B',
+          analysis: '等腰三角形底边上的高也是中线，将底边分为两段各3。构成直角三角形：3² + h² = 5²，所以 h² = 25 - 9 = 16，h = 4。'
+        },
+        {
+          id: 'q4',
+          knowledge_id: '勾股定理',
+          question: '在平面直角坐标系中，点A(3,4)到原点的距离是多少？',
+          type: 'choice',
+          options: [
+            { letter: 'A', text: '3' },
+            { letter: 'B', text: '4' },
+            { letter: 'C', text: '5' },
+            { letter: 'D', text: '7' }
+          ],
+          answer: 'C',
+          analysis: '点(x,y)到原点的距离公式为 √(x² + y²)，即 √(3² + 4²) = √25 = 5。'
+        },
+        {
+          id: 'q5',
+          knowledge_id: '勾股定理逆定理',
+          question: '如果一个三角形的三边长分别为6、8、10，则这个三角形是什么三角形？',
+          type: 'choice',
+          options: [
+            { letter: 'A', text: '锐角三角形' },
+            { letter: 'B', text: '直角三角形' },
+            { letter: 'C', text: '钝角三角形' },
+            { letter: 'D', text: '等腰三角形' }
+          ],
+          answer: 'B',
+          analysis: '6² + 8² = 36 + 64 = 100 = 10²，满足勾股定理逆定理，所以是直角三角形。'
+        }
+      ];
+      
+      processQuestions(mockQuestions);
+    }
+    
+    // ========== 渲染题目 ==========
+    function renderQuestion() {
+      const container = document.getElementById('quizContent');
+      const question = questions[currentIndex];
+      
+      if (!question) {
+        container.innerHTML = `
+          <div class="quiz-card">
+            <div class="empty-state">
+              <div class="empty-icon">📝</div>
+              <text class="empty-title">暂无习题</text>
+              <text class="empty-text">请联系老师添加习题内容</text>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      // 更新进度
+      const progress = ((currentIndex + 1) / questions.length) * 100;
+      document.getElementById('progressFill').style.width = progress + '%';
+      document.getElementById('progressText').textContent = `${currentIndex + 1} / ${questions.length}`;
+      
+      // 重置选择状态
+      selectedIndex = -1;
+      hasSelected = false;
+      
+      // 渲染题目
+      container.innerHTML = `
+        <div class="quiz-card">
+          <div class="quiz-header">
+            <text class="quiz-type">${getQuestionTypeText(question.type)}</text>
+            <text class="quiz-number">第 ${currentIndex + 1} 题</text>
+          </div>
+          
+          <text class="quiz-question">${question.question}</text>
+          
+          <div class="options-list">
+            ${question.options.map((opt, index) => `
+              <div class="option-item" data-index="${index}" onclick="selectOption(${index})">
+                <div class="option-letter">${opt.letter}</div>
+                <text class="option-text">${opt.text}</text>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="quiz-footer" id="quizFooter">
+            <div class="hint-text">
+              <span>💡</span>
+              <text>点击选择答案后提交</text>
+            </div>
+            <button class="submit-btn" id="submitBtn" onclick="submitAnswer()" disabled>提交答案</button>
+          </div>
+        </div>
+      `;
+    }
+    
+    // ========== 选择选项 ==========
+    function selectOption(index) {
+      if (hasSelected) return;
+      
+      selectedIndex = index;
+      hasSelected = true;
+      
+      const options = document.querySelectorAll('.option-item');
+      options.forEach((opt, i) => {
+        opt.classList.remove('selected');
+        if (i === index) {
+          opt.classList.add('selected');
+        }
+      });
+      
+      document.getElementById('submitBtn').disabled = false;
+    }
+    
+    // ========== 提交答案 ==========
+    function submitAnswer() {
+      if (!hasSelected) return;
+      
+      const question = questions[currentIndex];
+      const selectedOption = question.options[selectedIndex];
+      const selectedAnswer = selectedOption.letter;
+      const isCorrect = selectedAnswer === question.answer;
+      
+      // 更新正确数
+      if (isCorrect) {
+        correctCount++;
+      }
+      
+      // 记录答案
+      answers.push({
+        questionId: question.id,
+        knowledge_id: question.knowledge_id,
+        selectedAnswer: selectedAnswer,
+        isCorrect: isCorrect
+      });
+      
+      // 显示结果样式
+      const options = document.querySelectorAll('.option-item');
+      options.forEach((opt, i) => {
+        const letter = question.options[i].letter;
+        if (letter === question.answer) {
+          opt.classList.add('correct');
+        } else if (i === selectedIndex && !isCorrect) {
+          opt.classList.add('wrong');
+        }
+      });
+      
+      // 显示解析
+      const footer = document.getElementById('quizFooter');
+      let analysisHtml = '';
+      if (question.analysis) {
+        analysisHtml = `
+          <div class="analysis-box">
+            <div class="analysis-title">📝 答案解析</div>
+            <div class="analysis-text">${question.analysis}</div>
+          </div>
+        `;
+      }
+      
+      const isLast = currentIndex >= questions.length - 1;
+      footer.innerHTML = `
+        ${analysisHtml}
+        <button class="${isCorrect ? 'next-btn' : 'submit-btn'}" style="background: ${isCorrect ? 'linear-gradient(135deg, #43e97b, #38f9d7)' : 'linear-gradient(135deg, #667eea, #764ba2)'};" onclick="nextQuestion()">
+          ${isLast ? '查看结果' : '下一题'}
+        </button>
+      `;
+      
+      hasSelected = false; // 允许切换显示
+    }
+    
+    // ========== 下一题 ==========
+    function nextQuestion() {
+      if (currentIndex >= questions.length - 1) {
+        // 显示结果
+        showResult = true;
+        document.getElementById('resultOverlay').style.display = 'flex';
+        document.getElementById('resultScore').textContent = `${correctCount}/${questions.length}`;
+        document.getElementById('resultComment').textContent = getResultComment(correctCount, questions.length);
+        
+        const rate = correctCount / questions.length;
+        if (rate >= 0.8) {
+          document.getElementById('resultIcon').textContent = '🎉';
+        } else if (rate >= 0.5) {
+          document.getElementById('resultIcon').textContent = '👍';
+        } else {
+          document.getElementById('resultIcon').textContent = '💪';
+        }
+      } else {
+        currentIndex++;
+        renderQuestion();
+      }
+    }
+    
+    // ========== 结果页操作 ==========
+    // 查看学情报告（调用接口生成报告后跳转）
+    async function viewReport() {
+      document.getElementById('resultOverlay').style.display = 'none';
+      
+      if (!videoId) {
+        goBack();
+        return;
+      }
+      
+      showLoading('正在生成学情报告...');
+      
+      console.log('>>> viewReport 被调用');
+      console.log('>>> videoId:', videoId);
+      console.log('>>> 接口: POST /api/v1/agent/report');
+      
+      try {
+        const res = await fetchWithAuth('/api/v1/agent/report', {
+          method: 'POST',
+          body: JSON.stringify({ video_id: String(videoId) })
+        });
+        
+        console.log('>>> 生成学情报告返回:', JSON.stringify(res, null, 2));
+        
+        if ((res.code === 0 || res.code === 200) && res.data) {
+          // 成功，跳转到学情报告页面，传递报告数据
+          const reportData = encodeURIComponent(JSON.stringify(res.data));
+          location.href = `study-report.html?videoId=${videoId}&reportData=${reportData}&fromQuiz=true`;
+        } else {
+          alert(res.msg || '生成报告失败');
+          hideLoading();
+        }
+      } catch (err) {
+        console.error('>>> 生成学情报告失败:', err);
+        alert('网络请求失败');
+        hideLoading();
+      }
+    }
+    
+    // 保持兼容性，goToStudyData 现在跳转到 study-report
+    function goToStudyData() {
+      viewReport();
+    }
+    
+    function backToStudy() {
+      document.getElementById('resultOverlay').style.display = 'none';
+      if (videoId) {
+        location.href = `video-play.html?videoId=${videoId}`;
+      } else {
+        goBack();
+      }
+    }
+    
+    // ========== 初始化 ==========
+    function init() {
+      if (!checkLogin()) return;
+      
+      videoId = getQueryParam('videoId');
+      knowledgeId = getQueryParam('knowledgeId') || getQueryParam('segmentId');
+      
+      if (videoId) videoId = parseInt(videoId);
+      
+      const title = getQueryParam('title') || getQueryParam('videoTitle');
+      if (title) {
+        document.querySelector('.header-title').textContent = decodeURIComponent(title);
+      }
+      
+      loadQuestions();
+    }
+    
+    init();
+  </script>
+</body>
+</html>
