@@ -82,3 +82,4 @@ npx http-server -p 3000
 2. 视频播放功能需要网络连接
 3. AI 聊天功能依赖后端 AI 服务
 "# Knowpals-fe-mobile-H5" 
+"# Knowpals-fe--H5-mobile" 
