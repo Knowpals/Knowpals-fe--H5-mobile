@@ -13,7 +13,7 @@
   --navigation-bar-height: 44px;
 }
 
-.container {
+    .container {
     min-height: 100vh;
     background-color: #f5f7fa;
     display: flex;
@@ -21,7 +21,30 @@
     padding-bottom: 120px;
   }
 
-/* 顶部导航栏 */
+  /* 移动端适配 */
+  @media screen and (max-width: 375px) {
+    .stats-section { padding: 15px 15px; }
+    .stats-icon { font-size: 28px; margin-right: 10px; }
+    .stats-title { font-size: 16px; }
+    .stats-count { font-size: 24px; }
+    .section-header { padding: 12px 15px 8px; }
+    .section-title { font-size: 14px; }
+    .list-hint { font-size: 11px; }
+    .classes-list { padding: 8px 15px 20px; }
+    .class-card { padding: 10px; }
+    .class-avatar { width: 36px; height: 36px; border-radius: 6px; }
+    .avatar-text { font-size: 16px; }
+    .class-name { font-size: 13px; margin-bottom: 3px; }
+    .class-teacher { font-size: 11px; }
+    .class-meta { font-size: 10px; }
+    .bottom-notice { bottom: 55px; padding: 10px 12px; }
+    .notice-icon { font-size: 20px; margin-right: 8px; }
+    .notice-title { font-size: 13px; }
+    .notice-subtitle { font-size: 11px; }
+    .notice-arrow { font-size: 20px; }
+  }
+
+  /* 顶部导航栏 */
 .top-nav {
   position: fixed;
   top: 0;
@@ -29,6 +52,7 @@
   right: 0;
   background: #ffffff;
   z-index: 500;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .status-bar {
@@ -49,14 +73,19 @@
   color: #333;
 }
   
+  /* ==================== 内容区域适配 ==================== */
+  .stats-section {
+    margin-top: calc(var(--status-bar-height) + var(--navigation-bar-height));
+  }
+  
   /* ==================== 顶部统计区域 ==================== */
   .stats-section {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 40px 30px;
+    padding: 20px 20px;
     color: #fff;
-    border-radius: 0 0 30px 30px;
-    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
-    margin-bottom: 20px;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    margin-bottom: 15px;
   }
   
   .stats-content {
@@ -65,8 +94,8 @@
   }
   
   .stats-icon {
-    font-size: 60px;
-    margin-right: 30px;
+    font-size: 40px;
+    margin-right: 15px;
     opacity: 0.9;
   }
   
@@ -76,13 +105,13 @@
   }
   
   .stats-title {
-    font-size: 40px;
+    font-size: 24px;
     opacity: 0.9;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
   
   .stats-count {
-    font-size: 48px;
+    font-size: 32px;
     font-weight: bold;
   }
 
@@ -101,20 +130,20 @@
 
 /* 标题区域 */
 .section-header {       
-    padding: 30px 30px 20px;
+    padding: 15px 20px 10px;
     border-bottom: 1px solid #f0f0f0;
   }
   
   .section-title {
-    font-size: 36px;
+    font-size: 18px;
     font-weight: bold;
     color: #333;
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
   }
   
   .list-hint {
-    font-size: 24px;
+    font-size: 13px;
     color: #666;
     display: block;
   }
@@ -127,115 +156,104 @@
     width: 100%;
   }
 
-/* 班级网格布局 */
-.classes-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: flex-start;
-    padding: 20px;
-    width: 100%;
-    box-sizing: border-box;
-    align-items: center;
-  }
+/* 班级列表区域 - 类似 class-course 的垂直列表布局 */
+.classes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 15px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
 
+/* 班级卡片 - 横向布局 */
 .class-card {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    background-color: #fff;
-    border-radius: 20px;
-    padding: 30px;
-    border: 2px solid #f0f0f0;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  border-left: 4px solid #7B68EE;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
 
   .class-card.active {
-    border-color: #7B68EE;
-    box-shadow: 0 8px 30px rgba(123, 104, 238, 0.2);
-    transform: translateY(-4px);
+    border-left-color: #FFA500;
+    box-shadow: 0 4px 15px rgba(123, 104, 238, 0.15);
   }
 
   .class-card:active {
-    opacity: 0.9;
-    transform: scale(0.98);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   }
 
 /* 班级头像 */
 .class-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #9D7AFE, #7B68EE);
-  }
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  background: linear-gradient(135deg, #9D7AFE, #7B68EE);
+  flex-shrink: 0;
+}
 
   .avatar-text {
-    font-size: 50px;
+    font-size: 22px;
     color: #fff;
     font-weight: bold;
   }
 
-/* 班级内容 */
+/* 班级内容 - 左边部分 */
 .class-content {
-    width: 85%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
   .class-name {
     display: block;
-    font-size: 30px;
+    font-size: 16px;
     font-weight: 600;
     color: #333;
-    margin-bottom: 15px;
+    margin-bottom: 6px;
     line-height: 1.3;
-    height: 80px;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    text-align: center;
-    width: 100%;
+    white-space: nowrap;
   }
 
   .class-teacher {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 30px;
+    gap: 6px;
+    font-size: 14px;
     color: #666;
-    margin-bottom: 10px;
-    width: 100%;
-    margin-top: -20px;
   }
 
-  .teacher-icon {
-    font-size: 20px;
-  }
+    .teacher-icon {
+      font-size: 14px;
+    }
 
 /* 班级元信息 */
 .class-meta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 24px;
-    color: #666;
-    width: 100%;
-  }
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
 
   .meta-icon {
-    font-size: 20px;
+    font-size: 13px;
   }
 
 /* 空状态 */
@@ -305,7 +323,7 @@
     flex-direction: column;
     align-items: center;
     color: #999999;
-    font-size: 24px;
+    font-size: 12px;
     text-decoration: none;
   }
 
@@ -314,25 +332,26 @@
   }
 
   .tab-icon {
-    font-size: 44px;
-    margin-bottom: 6px;
+    font-size: 24px;
+    margin-bottom: 4px;
   }
 
   /* 底部未完成预习提示 - 显示在导航栏上方 */
   .bottom-notice {
     position: fixed;
     bottom: 60px;
-    left: 0;
-    right: 0;
+    left: 15px;
+    right: 15px;
     background: linear-gradient(90deg, #FFA500, #FF8C00);
-    padding: 20px 30px;
+    padding: 12px 15px;
     color: #fff;
     display: flex;
     justify-content: space-between;
     align-items: center;
     z-index: 150;
-    box-shadow: 0 -4px 20px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 -4px 15px rgba(255, 165, 0, 0.3);
     cursor: pointer;
+    border-radius: 10px;
   }
 
   .bottom-notice:active {
@@ -345,8 +364,8 @@
   }
 
   .notice-icon {
-    font-size: 40px;
-    margin-right: 20px;
+    font-size: 24px;
+    margin-right: 10px;
     opacity: 0.9;
   }
 
@@ -356,21 +375,21 @@
   }
 
   .notice-title {
-    font-size: 28px;
+    font-size: 14px;
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
   }
 
   .notice-subtitle {
-    font-size: 22px;
+    font-size: 12px;
     opacity: 0.9;
   }
 
   .notice-arrow {
-    font-size: 40px;
+    font-size: 24px;
     opacity: 0.7;
     font-weight: bold;
-    margin-left: 15px;
+    margin-left: 10px;
   }
   </style>
 </head>
@@ -405,8 +424,8 @@
       
       <!-- 垂直滚动容器 -->
       <div class="classes-vertical-scroll" id="scrollContainer">
-        <!-- 班级网格列表 -->
-        <div class="classes-grid" id="classesGrid"></div>
+        <!-- 班级列表 -->
+        <div class="classes-list" id="classesList"></div>
         
         <!-- 空状态 -->
         <div class="empty-state" id="emptyState" style="display: none;">
@@ -463,7 +482,7 @@
   };
 
   // DOM元素
-  let classCountEl, classesGridEl, emptyStateEl, bottomNoticeEl, pendingCountEl, scrollContainerEl;
+  let classCountEl, classesListEl, emptyStateEl, bottomNoticeEl, pendingCountEl, scrollContainerEl;
 
   // 封装请求方法 - 与原小程序request.js一致
   function requestGet(url) {
@@ -473,7 +492,7 @@
   // 初始化
   function init() {
     classCountEl = document.getElementById('classCount');
-    classesGridEl = document.getElementById('classesGrid');
+    classesListEl = document.getElementById('classesList');
     emptyStateEl = document.getElementById('emptyState');
     bottomNoticeEl = document.getElementById('bottomNotice');
     pendingCountEl = document.getElementById('pendingCount');
@@ -558,12 +577,12 @@
     // 渲染班级列表
     if (state.classes.length === 0) {
       emptyStateEl.style.display = 'flex';
-      classesGridEl.style.display = 'none';
+      classesListEl.style.display = 'none';
     } else {
       emptyStateEl.style.display = 'none';
-      classesGridEl.style.display = 'flex';
+      classesListEl.style.display = 'flex';
       
-      classesGridEl.innerHTML = state.classes.map((item, index) => `
+      classesListEl.innerHTML = state.classes.map((item, index) => `
         <div class="class-card ${state.currentClassId === item.id ? 'active' : ''}" data-index="${index}">
           <div class="class-avatar">
             <span class="avatar-text">${item.name ? item.name.substring(0, 1) : '班'}</span>
@@ -583,7 +602,7 @@
       `).join('');
 
       // 绑定班级卡片点击事件
-      classesGridEl.querySelectorAll('.class-card').forEach(card => {
+      classesListEl.querySelectorAll('.class-card').forEach(card => {
         card.addEventListener('click', function() {
           const index = parseInt(this.dataset.index);
           onClassTap(index);
@@ -606,13 +625,13 @@
   // 计算滚动区域高度
   function calculateScrollHeight() {
     const windowHeight = window.innerHeight;
-    const statusBarHeight = 120;
-    const statsHeight = 180;
-    const bottomNoticeHeight = state.pendingCount > 0 ? 120 : 0;
-    const bottomMargin = 40;
+    const statusBarHeight = 88; // 44 + 44
+    const statsHeight = 100;
+    const bottomNoticeHeight = state.pendingCount > 0 ? 55 : 0;
+    const tabBarHeight = 60;
     
-    const availableHeight = windowHeight - statusBarHeight - statsHeight - bottomNoticeHeight - bottomMargin;
-    state.scrollHeight = Math.max(availableHeight, 300);
+    const availableHeight = windowHeight - statusBarHeight - statsHeight - bottomNoticeHeight - tabBarHeight - 20;
+    state.scrollHeight = Math.max(availableHeight, 200);
 
     if (scrollContainerEl) {
       scrollContainerEl.style.height = state.scrollHeight + 'px';

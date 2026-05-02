@@ -22,21 +22,21 @@
       top: 0;
       left: 0;
       right: 0;
-      z-index: 100;
+      z-index: 200;
     }
     .nav-left { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .back-arrow { font-size: 20px; font-weight: bold; }
     .nav-title { font-size: 16px; font-weight: 500; flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 10px; }
     .nav-right { width: 30px; }
     
-    /* 视频区域 - 修复渲染问题 */
+    /* 视频区域 - 适配手机端 */
     .video-section { 
       position: relative; 
       width: 100%; 
       background-color: #000; 
       margin-top: 44px;
-      /* 确保视频容器有适当的高度 */
-      min-height: 200px;
+      /* 手机端固定高度 */
+      height: 200px;
     }
     
     .video-section.fullscreen {
@@ -47,6 +47,7 @@
       bottom: 0;
       margin-top: 0;
       z-index: 999;
+      height: 100%;
     }
     
     .video-section.fullscreen .video-player {
@@ -55,19 +56,25 @@
     
     .video-player { 
       width: 100%; 
-      height: 211px;
-      min-height: 211px;
+      height: 200px;
       display: block;
       object-fit: contain;
       background-color: #000;
-      position: relative;
-      z-index: 2;
+    }
+    
+    .video-placeholder,
+    .video-cover {
+      position: absolute;
+      top: 0;
+      left: 0;
     }
     
     @media (min-width: 768px) {
+      .video-section {
+        height: 400px;
+      }
       .video-player {
         height: 400px;
-        min-height: 400px;
       }
     }
     
@@ -111,111 +118,181 @@
     .video-cover.hidden { display: none; }
     .play-btn-large { width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 25px; color: #333; padding-left: 5px; cursor: pointer; }
     
-    /* AI悬浮按钮 */
+    /* AI悬浮按钮 - 移到视频下方进度条区域 */
     .ai-float-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 45px;
-      height: 45px;
+      width: 40px;
+      height: 40px;
       background: linear-gradient(135deg, #667eea, #764ba2);
       border-radius: 50%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-      z-index: 50;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
       cursor: pointer;
+      flex-shrink: 0;
     }
-    .ai-btn-icon { font-size: 18px; line-height: 1; }
-    .ai-btn-text { font-size: 10px; color: #fff; font-weight: 600; line-height: 1; margin-top: 2px; }
+    .ai-btn-icon { font-size: 18px; color: #fff; line-height: 1; }
+    .ai-btn-text { font-size: 10px; color: #fff; font-weight: 600; line-height: 1; margin-top: 2px; display: none; }
     
-    /* 视频控制栏 */
+    /* 视频控制栏 - 移到视频下方独立区域 */
     .video-controls {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 50px;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
-      z-index: 10;
+      background: #fff;
+      padding: 12px 15px;
+      margin: 0;
     }
-    .control-btn {
-      width: 30px;
-      height: 30px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 4px;
+    
+    /* 进度条控制区域 */
+    .progress-control-bar {
+      background: #fff;
+      padding: 10px 15px 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .progress-row {
       display: flex;
       align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 12px;
-      margin: 0 4px;
+      margin-bottom: 8px;
+    }
+    
+    .progress-track-wrapper {
+      flex: 1;
+      position: relative;
+      height: 6px;
+      background: #e5e5e5;
+      border-radius: 3px;
+      margin: 0 10px;
       cursor: pointer;
     }
-    .play-pause-btn { width: 35px; height: 35px; }
-    .play-pause-btn text { font-size: 14px; }
-    .progress-container { flex: 1; margin: 0 8px; display: flex; flex-direction: column; justify-content: center; position: relative; }
-    .progress-track { position: relative; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; cursor: pointer; overflow: visible; }
     
-    /* 进度条上的互动节点标记 */
+    .progress-fill { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      height: 100%; 
+      background: linear-gradient(90deg, #667eea, #764ba2); 
+      border-radius: 3px; 
+    }
+    
+    .progress-thumb { 
+      position: absolute; 
+      top: 50%; 
+      transform: translate(-50%, -50%); 
+      width: 14px; 
+      height: 14px; 
+      background: #fff; 
+      border: 2px solid #667eea;
+      border-radius: 50%; 
+    }
+    
+    /* 互动节点 - 在进度条上 */
     .progress-node {
       position: absolute;
       top: 50%;
       transform: translate(-50%, -50%);
-      width: 8px;
-      height: 8px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      z-index: 2;
       background-color: #f59e0b;
       border: 2px solid #fff;
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+      cursor: pointer;
+      z-index: 10;
     }
-    .progress-node.triggered { background-color: #22c55e; }
+    .progress-node.triggered { background-color: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.6); }
     
-    .progress-fill { position: absolute; top: 0; left: 0; height: 100%; background: #8b5cf6; border-radius: 2px; }
-    .progress-thumb { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; background: #8b5cf6; border-radius: 50%; z-index: 3; }
-    .time-display { display: flex; font-size: 10px; color: #fff; margin-top: 4px; }
+    .time-info {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #666;
+      min-width: 80px;
+    }
+    .time-info text { margin: 0 2px; }
+    
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 5px;
+    }
+    
+    .control-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .control-btn {
+      width: 32px;
+      height: 32px;
+      background: #f5f5f5;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .play-pause-btn { 
+      width: 40px; 
+      height: 40px; 
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      font-size: 16px;
+    }
+    
+    .control-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .speed-btn {
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .interaction-toggle {
+      font-size: 11px;
+      padding: 0 8px;
+      height: 24px;
+      border-radius: 12px;
+      background: #e5e5e5;
+    }
+    .interaction-toggle.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+    }
+    .time-display { display: flex; font-size: 10px; color: #fff; margin-top: 4px; position: relative; z-index: 85; }
     .time-display text { margin: 0 2px; }
     
     /* 切片指示器 */
     .segment-indicator {
-      position: absolute;
-      right: 0;
-      bottom: 100%;
-      margin-bottom: 4px;
-      font-size: 9px;
-      color: rgba(255,255,255,0.8);
-      white-space: nowrap;
+      font-size: 11px;
+      color: #999;
     }
-    
-    .control-right { display: flex; align-items: center; }
     
     /* 速度选择器 */
     .speed-selector {
-      position: absolute;
-      top: 40px;
-      right: 10px;
-      background: rgba(0,0,0,0.9);
-      border-radius: 6px;
-      padding: 5px 0;
-      z-index: 50;
-      opacity: 0;
-      transform: translateY(-5px);
-      transition: all 0.3s;
-      pointer-events: none;
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      padding: 10px 15px;
     }
-    .speed-selector.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .speed-list { display: flex; flex-direction: column; }
-    .speed-item { padding: 8px 15px; color: #fff; font-size: 13px; text-align: center; cursor: pointer; }
-    .speed-item.active { color: #8b5cf6; }
-    
-    /* 互动开关按钮 */
-    .popup-toggle-btn { font-size: 11px; }
-    .popup-toggle-btn.active { background-color: #8b5cf6; }
+    .speed-list { display: flex; gap: 8px; flex-wrap: wrap; }
+    .speed-item { 
+      padding: 8px 16px; 
+      background: #f5f5f5; 
+      border-radius: 20px; 
+      font-size: 13px; 
+      color: #666; 
+      cursor: pointer; 
+    }
+    .speed-item.active { 
+      background: linear-gradient(135deg, #667eea, #764ba2); 
+      color: #fff; 
+    }
     
     /* 全屏控制栏样式 */
     .video-controls.fullscreen-controls {
@@ -249,13 +326,14 @@
       align-items: center;
       color: #fff;
       font-size: 12px;
+      z-index: 5;
     }
     .loading-tip.hidden { display: none; }
     .loading-spinner { width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 5px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     
     /* 答题区域 */
-    .answer-section { background-color: #fff; margin: 10px; border-radius: 8px; padding: 15px; }
+    .answer-section { background-color: #fff; margin: 10px; border-radius: 8px; padding: 15px; position: relative; z-index: 10; }
     .answer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .answer-title { font-size: 16px; font-weight: 600; color: #333; }
     .teacher-tag { width: 20px; height: 20px; background: #22c55e; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; }
@@ -337,7 +415,7 @@
       right: 0;
       bottom: 0;
       background: rgba(0,0,0,0.6);
-      z-index: 200;
+      z-index: 9998;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -359,7 +437,7 @@
     .popup-btn.cancel { background: #e5e5e5; color: #999; }
     .popup-btn.confirm { background: #8b5cf6; color: #fff; }
     
-    /* 答题弹窗 */
+    /* 答题弹窗 - 固定在屏幕中央 */
     .quiz-popup-overlay {
       position: fixed;
       top: 0;
@@ -367,21 +445,24 @@
       right: 0;
       bottom: 0;
       background: rgba(0,0,0,0.7);
-      z-index: 210;
+      z-index: 9999;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .quiz-popup-overlay.hidden { display: none; }
     .quiz-popup-box {
       width: 100%;
       max-width: 325px;
-      max-height: 85vh;
+      max-height: 80vh;
       background: #fff;
       border-radius: 12px;
       padding: 15px;
       overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     }
     .quiz-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e5e5e5; }
     .quiz-popup-title { font-size: 16px; font-weight: 600; color: #333; }
@@ -417,7 +498,7 @@
       right: 0;
       bottom: 0;
       background: rgba(0,0,0,0.85);
-      z-index: 300;
+      z-index: 9997;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -455,11 +536,13 @@
       right: 0;
       bottom: 0;
       background: rgba(0,0,0,0.7);
-      z-index: 250;
+      z-index: 9996;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 20px;
+      padding: 60px 15px 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .report-popup-overlay.hidden { display: none; }
     .report-popup-box {
@@ -494,11 +577,7 @@
   <div class="container" id="app">
     <!-- 导航栏 -->
     <div class="nav-bar">
-      <div class="nav-left" onclick="goBack()">
-        <span class="back-arrow">←</span>
-      </div>
       <div class="nav-title" id="videoTitle">加载中...</div>
-      <div class="nav-right"></div>
     </div>
     
     <!-- 视频区域 -->
@@ -516,76 +595,90 @@
         <div class="play-btn-large">▶</div>
       </div>
       
-      <!-- AI 助手按钮 -->
-      <div class="ai-float-btn" onclick="openAI()">
-        <span class="ai-btn-icon">🤖</span>
-        <span class="ai-btn-text">AI</span>
-      </div>
-      
-      <!-- 自定义视频控制栏 -->
-      <div class="video-controls">
-        <!-- 播放/暂停按钮 -->
-        <div class="control-btn play-pause-btn" onclick="togglePlay()">
-          <span id="playBtnText">▶</span>
-        </div>
-        
-        <!-- 进度条区域 -->
-        <div class="progress-container">
-          <div class="progress-track" id="progressTrack" onclick="tapProgressBar(event)">
-            <!-- 切片结束标记（橙色圆点表示需要答题） -->
-            <div id="interactionNodesContainer"></div>
-            <!-- 播放进度条 -->
-            <div class="progress-fill" id="progressFill"></div>
-            <!-- 进度拖动点 -->
-            <div class="progress-thumb" id="progressThumb"></div>
-          </div>
-          <!-- 时间显示 -->
-          <div class="time-display">
-            <span id="currentTime">00:00</span>
-            <span>/</span>
-            <span id="totalTime">00:00</span>
-          </div>
-          <!-- 当前切片指示 -->
-          <div class="segment-indicator" id="segmentIndicator"></div>
-        </div>
-        
-        <!-- 右侧控制按钮组 -->
-        <div class="control-right">
-          <!-- 播放速度按钮 -->
-          <div class="control-btn speed-btn" id="speedBtn" onclick="toggleSpeedOptions()">
-            <span id="speedText">1.0×</span>
-          </div>
-          
-          <!-- 全屏按钮 -->
-          <div class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
-            <span id="fullscreenText">⛶</span>
-          </div>
-          
-          <!-- 互动开关按钮 -->
-          <div class="control-btn popup-toggle-btn active" id="interactionToggle" onclick="toggleInteraction()">
-            <span>弹</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 播放速度选择面板 -->
-      <div class="speed-selector" id="speedSelector">
-        <div class="speed-list">
-          <div class="speed-item" onclick="selectSpeed('0.5×')">0.5×</div>
-          <div class="speed-item" onclick="selectSpeed('0.75×')">0.75×</div>
-          <div class="speed-item active" onclick="selectSpeed('1.0×')">1.0×</div>
-          <div class="speed-item" onclick="selectSpeed('1.25×')">1.25×</div>
-          <div class="speed-item" onclick="selectSpeed('1.5×')">1.5×</div>
-          <div class="speed-item" onclick="selectSpeed('2.0×')">2.0×</div>
-        </div>
-      </div>
-      
       <!-- 加载提示 -->
       <div class="loading-tip" id="loadingTip">
         <div class="loading-spinner"></div>
         <span>视频加载中...</span>
       </div>
     </div>
+    
+    <!-- 进度条控制区域 -->
+    <div class="progress-control-bar">
+      <div class="progress-row">
+        <span class="time-info">
+          <span id="currentTime">00:00</span>
+        </span>
+        <div class="progress-track-wrapper" id="progressTrack" onclick="tapProgressBar(event)">
+          <div class="progress-fill" id="progressFill"></div>
+          <div id="interactionNodesContainer"></div>
+          <div class="progress-thumb" id="progressThumb"></div>
+        </div>
+        <span class="time-info">
+          <span id="totalTime">00:00</span>
+        </span>
+      </div>
+      <div class="control-row">
+        <div class="control-left">
+          <div class="control-btn play-pause-btn" onclick="togglePlay()">
+            <span id="playBtnText">▶</span>
+          </div>
+          <span class="segment-indicator" id="segmentIndicator"></span>
+        </div>
+        <div class="control-right">
+          <div class="control-btn speed-btn" id="speedBtn" onclick="toggleSpeedOptions()">
+            <span id="speedText">1.0×</span>
+          </div>
+          <div class="control-btn interaction-toggle active" id="interactionToggle" onclick="toggleInteraction()">
+            <span>弹</span>
+          </div>
+          <!-- AI 助手按钮 -->
+          <div class="ai-float-btn" onclick="openAI()">
+            <span class="ai-btn-icon">🤖</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 速度选择面板 -->
+    <div class="speed-selector" id="speedSelector" style="display: none;">
+      <div class="speed-list">
+        <div class="speed-item" onclick="selectSpeed('0.5×')">0.5×</div>
+        <div class="speed-item" onclick="selectSpeed('0.75×')">0.75×</div>
+        <div class="speed-item active" onclick="selectSpeed('1.0×')">1.0×</div>
+        <div class="speed-item" onclick="selectSpeed('1.25×')">1.25×</div>
+        <div class="speed-item" onclick="selectSpeed('1.5×')">1.5×</div>
+        <div class="speed-item" onclick="selectSpeed('2.0×')">2.0×</div>
+      </div>
+    </div>
+
+    <!-- 互动答题弹窗 - 显示在视频下方 -->
+    <div class="quiz-popup-overlay hidden" id="questionPopup">
+      <div class="quiz-popup-box">
+        <!-- 弹窗顶部 -->
+        <div class="quiz-popup-header">
+          <text class="quiz-popup-title">互动答题</text>
+          <div class="quiz-close-btn" onclick="closeQuestionPopup()">✕</div>
+        </div>
+        
+        <!-- 题目内容 -->
+        <div class="quiz-question" id="popupQuestion"></div>
+        
+        <!-- 选项列表 -->
+        <div class="quiz-options" id="popupOptions"></div>
+        
+        <!-- 答题结果 -->
+        <div class="quiz-result hidden" id="popupResult">
+          <div class="result-message" id="popupResultMessage"></div>
+          <div class="quiz-analysis hidden" id="popupAnalysis"></div>
+        </div>
+        
+        <!-- 提交按钮 -->
+        <div class="quiz-actions">
+          <div class="quiz-submit-btn disabled" id="popupSubmitBtn" onclick="submitPopupAnswer()">提交答案</div>
+        </div>
+      </div>
+    </div>
+
     <div class="answer-section">
       <!-- 区域标题栏 -->
       <div class="answer-header">
@@ -654,34 +747,6 @@
       <div class="popup-buttons">
         <div class="popup-btn cancel" onclick="cancelInteraction()">取消</div>
         <div class="popup-btn confirm" onclick="confirmInteraction()">确认</div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- 互动答题弹窗 -->
-  <div class="quiz-popup-overlay hidden" id="questionPopup">
-    <div class="quiz-popup-box">
-      <!-- 弹窗顶部 -->
-      <div class="quiz-popup-header">
-        <text class="quiz-popup-title">互动答题</text>
-        <div class="quiz-close-btn" onclick="closeQuestionPopup()">✕</div>
-      </div>
-      
-      <!-- 题目内容 -->
-      <div class="quiz-question" id="popupQuestion"></div>
-      
-      <!-- 选项列表 -->
-      <div class="quiz-options" id="popupOptions"></div>
-      
-      <!-- 答题结果 -->
-      <div class="quiz-result hidden" id="popupResult">
-        <div class="result-message" id="popupResultMessage"></div>
-        <div class="quiz-analysis hidden" id="popupAnalysis"></div>
-      </div>
-      
-      <!-- 提交按钮 -->
-      <div class="quiz-actions">
-        <div class="quiz-submit-btn disabled" id="popupSubmitBtn" onclick="submitPopupAnswer()">提交答案</div>
       </div>
     </div>
   </div>
@@ -1649,16 +1714,17 @@
       state.showSpeedOptions = !state.showSpeedOptions;
       const selector = document.getElementById('speedSelector');
       if (state.showSpeedOptions) {
-        selector.classList.add('show');
+        selector.style.display = 'block';
       } else {
-        selector.classList.remove('show');
+        selector.style.display = 'none';
       }
     }
     
     function selectSpeed(speed) {
       state.playbackSpeed = speed;
       safeSetText('speedText', speed);
-      document.getElementById('speedSelector').classList.remove('show');
+      document.getElementById('speedSelector').style.display = 'none';
+      state.showSpeedOptions = false;
       
       const rate = parseFloat(speed);
       video.playbackRate = rate;
@@ -1854,8 +1920,13 @@
       submitAnswerToServer(timeCost);
       
       // 刷新界面
-      openQuestionPopup();
       renderQuestionArea();
+      
+      // 答题完成后自动关闭弹窗
+      closeQuestionPopup();
+      
+      // 继续播放视频
+      video.play();
     }
     
     function closeQuestionPopup() {
