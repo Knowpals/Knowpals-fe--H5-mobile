@@ -1,7 +1,7 @@
 // utils/request.js - H5版本
 // 基础配置
 const config = {
-  baseUrl: 'https://knowpals.xyz',
+  baseUrl: 'https://student.knowpals.xyz',
   timeout: 60000
 };
 
