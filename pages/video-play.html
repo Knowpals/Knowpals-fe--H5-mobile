@@ -755,9 +755,9 @@
     </div>
   </div>
 
+  <script src="../js/utils.js"></script>
   <script>
     // ========== 全局配置 ==========
-    const API_BASE = 'https://knowpals.xyz';
     
     // ========== fetchWithAuth 封装 ==========
     async function fetchWithAuth(url, options = {}) {
@@ -780,7 +780,7 @@
         body = JSON.stringify(body);
       }
       
-      const fullUrl = url.startsWith('http') ? url : API_BASE + url;
+      const fullUrl = url.startsWith('http') ? url : config.baseUrl + url;
       
       console.log('========== H5 请求开始 ==========');
       console.log('>>> 方法:', method);

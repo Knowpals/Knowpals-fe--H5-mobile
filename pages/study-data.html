@@ -304,55 +304,8 @@
     </div>
   </div>
 
+  <script src="../js/utils.js"></script>
   <script>
-    // ========== 全局配置 ==========
-    const API_BASE = 'https://knowpals.xyz';
-    
-    function getToken() {
-      return localStorage.getItem('token');
-    }
-    
-    async function fetchWithAuth(url, options = {}) {
-      const token = getToken();
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        ...(options.headers || {})
-      };
-      
-      let body = options.body;
-      if (body && typeof body === 'object' && !(body instanceof String)) {
-        body = JSON.stringify(body);
-      }
-      
-      const fullUrl = url.startsWith('http') ? url : API_BASE + url;
-      
-      try {
-        const res = await fetch(fullUrl, {
-          method: options.method || 'GET',
-          headers: headers,
-          body: body,
-          mode: 'cors'
-        });
-        
-        if (res.status === 401 || res.status === 403) {
-          console.error('>>> 认证失败!');
-          localStorage.removeItem('token');
-          window.location.href = 'login.html';
-          return null;
-        }
-        
-        if (!res.ok) {
-          return { code: res.status, data: null, msg: '请求失败' };
-        }
-        
-        return await res.json();
-      } catch (err) {
-        console.error('>>> 请求失败:', err);
-        return { code: -1, data: null, msg: '网络错误' };
-      }
-    }
-    
     // ========== 页面状态 ==========
     const state = {
       courseTitle: '加载中...',
@@ -442,8 +395,8 @@
       try {
         // 同时获取学情统计和视频详情
         const [res, videoRes] = await Promise.all([
-          fetchWithAuth(`/api/v1/stat/student/${videoId}`),
-          fetchWithAuth(`/api/v1/video/getDetail/${videoId}`).catch(() => null)
+          request.get(`/api/v1/stat/student/${videoId}`),
+          request.get(`/api/v1/video/getDetail/${videoId}`).catch(() => null)
         ]);
         
         state.isLoading = false;
@@ -588,10 +541,7 @@
       console.log('>>> 接口: POST /api/v1/stat/class');
       
       try {
-        const res = await fetchWithAuth('/api/v1/stat/class', {
-          method: 'POST',
-          body: { class_id: classId }
-        });
+        const res = await request.post('/api/v1/stat/class', { class_id: classId });
         
         state.isLoading = false;
         console.log('>>> 班级学情数据响应:', JSON.stringify(res, null, 2));

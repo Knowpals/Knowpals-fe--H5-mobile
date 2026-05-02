@@ -388,6 +388,10 @@
       justify-content: center;
     }
 
+    .action-modal.hidden {
+      display: none;
+    }
+
     .modal-mask {
       position: absolute;
       top: 0;
@@ -400,18 +404,18 @@
     .modal-content {
       position: relative;
       width: 80%;
-      max-width: 600px;
+      max-width: 300px;
       background-color: #fff;
-      border-radius: 20px;
+      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
       animation: modalSlideUp 0.3s ease;
     }
 
     @keyframes modalSlideUp {
       from {
         opacity: 0;
-        transform: translateY(50px);
+        transform: translateY(25px);
       }
       to {
         opacity: 1;
@@ -420,7 +424,7 @@
     }
 
     .modal-header {
-      padding: 30px;
+      padding: 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -428,21 +432,21 @@
     }
 
     .modal-title {
-      font-size: 28px;
+      font-size: 14px;
       font-weight: 600;
       color: #333;
       flex: 1;
-      margin-right: 20px;
+      margin-right: 10px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .modal-close {
-      font-size: 50px;
+      font-size: 25px;
       color: #999;
-      width: 60px;
-      height: 60px;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -451,19 +455,19 @@
     }
 
     .modal-body {
-      padding: 30px;
+      padding: 15px;
     }
 
     .action-buttons {
       display: flex;
-      gap: 20px;
-      margin-bottom: 20px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
     .action-btn {
       flex: 1;
-      padding: 30px 20px;
-      border-radius: 15px;
+      padding: 15px 10px;
+      border-radius: 8px;
       text-align: center;
       transition: all 0.3s ease;
       display: flex;
@@ -478,19 +482,20 @@
     }
 
     .action-btn.watch-video {
-      background: linear-gradient(135deg, #FFA500, #FF8C00);
+      background: linear-gradient(135deg, #667eea, #764ba2);
       color: #fff;
-      box-shadow: 0 4px 20px rgba(255, 165, 0, 0.3);
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
     }
 
     .action-btn.study-report {
       background: linear-gradient(135deg, #4CAF50, #2E7D32);
       color: #fff;
-      box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
+      box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
     }
 
     .action-btn.study-report.disabled,
-    .action-btn.quiz-practice.disabled {
+    .action-btn.quiz-practice.disabled,
+    .action-btn.video-summary.disabled {
       background: #ccc;
       color: #999;
       box-shadow: none;
@@ -498,56 +503,43 @@
       cursor: not-allowed;
     }
 
+    .action-btn.video-summary {
+      background: linear-gradient(135deg, #FFA500, #FF8C00);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(255, 165, 0, 0.3);
+    }
+
     .action-btn.quiz-practice {
       background: linear-gradient(135deg, #f093fb, #f5576c);
       color: #fff;
-      box-shadow: 0 4px 20px rgba(245, 87, 108, 0.3);
+      box-shadow: 0 2px 10px rgba(245, 87, 108, 0.3);
     }
 
     .action-icon {
-      font-size: 50px;
-      margin-bottom: 10px;
+      font-size: 25px;
+      margin-bottom: 5px;
     }
 
     .action-text {
-      font-size: 24px;
+      font-size: 12px;
       font-weight: 600;
-      margin-bottom: 5px;
+      margin-bottom: 2px;
       line-height: 1.4;
     }
 
     .action-desc {
-      font-size: 20px;
+      font-size: 10px;
       opacity: 0.9;
       line-height: 1.4;
     }
 
-    .modal-info {
-      padding: 20px;
+    .task-progress-info {
+      padding: 10px;
       background-color: #f9f9f9;
-      border-radius: 10px;
-    }
-
-    .info-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-      font-size: 24px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 12px;
       color: #666;
-    }
-
-    .info-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .info-label {
-      min-width: 120px;
-      color: #999;
-    }
-
-    .info-value {
-      font-weight: 500;
-      color: #333;
     }
 
     /* 底部导航栏 */
@@ -639,40 +631,41 @@
     </div>
 
     <!-- 操作选择弹窗 -->
-    <div class="action-modal" id="actionModal" style="display: none;">
-      <div class="modal-mask" onclick="closeActionModal()"></div>
+    <div class="action-modal hidden" id="actionModal">
+      <div class="modal-mask" id="modalMask"></div>
       <div class="modal-content">
         <div class="modal-header">
-          <text class="modal-title" id="modalTitle"></text>
-          <div class="modal-close" onclick="closeActionModal()">×</div>
+          <span class="modal-title" id="modalTitle">课程标题</span>
+          <span class="modal-close" id="modalClose">×</span>
         </div>
         <div class="modal-body">
           <div class="action-buttons">
-            <div class="action-btn watch-video" onclick="goToVideoPlay()">
-              <div class="action-icon">🎬</div>
-              <text class="action-text">观看视频</text>
-              <text class="action-desc">继续学习</text>
+            <div class="action-btn watch-video" id="watchVideoBtn">
+              <span class="action-icon">🎬</span>
+              <span class="action-text">观看视频</span>
+              <span class="action-desc">进入互动学习</span>
             </div>
-            <div class="action-btn study-report" id="studyReportBtn" onclick="goToStudyData()">
-              <div class="action-icon">📊</div>
-              <text class="action-text">学情报告</text>
-              <text class="action-desc" id="studyReportDesc">查看学习情况</text>
-            </div>
-            <div class="action-btn quiz-practice" id="quizPracticeBtn" onclick="goToQuizPractice()">
-              <div class="action-icon">✍️</div>
-              <text class="action-text">个性练习</text>
-              <text class="action-desc" id="quizPracticeDesc">巩固薄弱点</text>
+            <div class="action-btn video-summary" id="videoSummaryBtn">
+              <span class="action-icon">📝</span>
+              <span class="action-text">视频总结</span>
+              <span class="action-desc" id="videoSummaryDesc">看完视频解锁</span>
             </div>
           </div>
-          <div class="modal-info">
-            <div class="info-row">
-              <text class="info-label">所属班级：</text>
-              <text class="info-value" id="className"></text>
+          <div class="action-buttons">
+            <div class="action-btn study-report" id="studyReportBtn">
+              <span class="action-icon">📊</span>
+              <span class="action-text">学情报告</span>
+              <span class="action-desc" id="studyReportDesc">暂无报告</span>
             </div>
-            <div class="info-row">
-              <text class="info-label">截止时间：</text>
-              <text class="info-value" id="deadline"></text>
+            <div class="action-btn quiz-practice" id="quizPracticeBtn">
+              <span class="action-icon">✍️</span>
+              <span class="action-text">个性练习</span>
+              <span class="action-desc" id="quizPracticeDesc">看完视频解锁</span>
             </div>
+          </div>
+          <div class="task-progress-info" id="progressInfo" style="display: none;">
+            <span class="progress-label">当前进度：</span>
+            <span class="progress-value" id="progressValue">0%</span>
           </div>
         </div>
       </div>
@@ -697,9 +690,6 @@
 
   <script src="../js/utils.js"></script>
   <script>
-    // API基础地址
-    const API_BASE = 'https://knowpals.xyz';
-
     // 页面状态
     const state = {
       allTasks: [],
@@ -709,8 +699,31 @@
       todayCount: 0,
       activeFilter: 'all',
       selectedTask: {},
+      selectedTaskIndex: -1,
       hasMore: false
     };
+
+    // DOM元素
+    let tasksListEl, emptyStateEl, loadMoreEl, actionModalEl;
+    let modalTitleEl, modalCloseEl, modalMaskEl;
+    let studyReportBtnEl, studyReportDescEl;
+    let quizPracticeBtnEl, quizPracticeDescEl;
+    let videoSummaryBtnEl, videoSummaryDescEl;
+    let progressInfoEl, progressValueEl;
+
+    // 页面可见性变化时刷新数据（从视频页返回时）
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        console.log('>>> pending-tasks 页面可见，刷新数据...');
+        loadPendingTasks(true);
+      }
+    });
+
+    // 页面获得焦点时也刷新（从其他页面返回时）
+    window.addEventListener('focus', function() {
+      console.log('>>> pending-tasks 页面获得焦点，刷新数据...');
+      loadPendingTasks(true);
+    });
 
     // 获取Token
     function getToken() {
@@ -734,23 +747,42 @@
 
     // 封装请求方法
     function requestGet(url) {
-      const token = getToken();
-      return fetch(API_BASE + url, {
-        method: 'GET',
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json'
-        }
-      }).then(res => res.json());
+      return request.get(url);
     }
 
     // 页面初始化
     function init() {
+      // 获取DOM元素
+      tasksListEl = document.getElementById('tasksList');
+      emptyStateEl = document.getElementById('emptyState');
+      loadMoreEl = document.getElementById('loadMore');
+      actionModalEl = document.getElementById('actionModal');
+      modalTitleEl = document.getElementById('modalTitle');
+      modalCloseEl = document.getElementById('modalClose');
+      modalMaskEl = document.getElementById('modalMask');
+      studyReportBtnEl = document.getElementById('studyReportBtn');
+      studyReportDescEl = document.getElementById('studyReportDesc');
+      quizPracticeBtnEl = document.getElementById('quizPracticeBtn');
+      quizPracticeDescEl = document.getElementById('quizPracticeDesc');
+      videoSummaryBtnEl = document.getElementById('videoSummaryBtn');
+      videoSummaryDescEl = document.getElementById('videoSummaryDesc');
+      progressInfoEl = document.getElementById('progressInfo');
+      progressValueEl = document.getElementById('progressValue');
+
+      // 绑定事件
+      modalCloseEl.addEventListener('click', closeActionModal);
+      modalMaskEl.addEventListener('click', closeActionModal);
+      document.getElementById('watchVideoBtn').addEventListener('click', goToVideoPlay);
+      studyReportBtnEl.addEventListener('click', goToStudyData);
+      quizPracticeBtnEl.addEventListener('click', goToQuizPractice);
+      videoSummaryBtnEl.addEventListener('click', goToVideoSummary);
+
       loadPendingTasks();
     }
 
     // 加载未完成任务
-    function loadPendingTasks() {
+    // isRefresh: 是否是刷新模式（刷新模式下不显示loading）
+    function loadPendingTasks(isRefresh = false) {
       // 获取学生加入的班级列表
       requestGet('/api/v1/class/my-joined').then(res => {
         const allClasses = [];
@@ -817,22 +849,43 @@
         if (urgentCount > 0) {
           document.getElementById('urgentBadge').style.display = 'block';
           document.getElementById('urgentBadge').textContent = urgentCount;
+        } else {
+          document.getElementById('urgentBadge').style.display = 'none';
         }
         if (todayCount > 0) {
           document.getElementById('todayBadge').style.display = 'block';
           document.getElementById('todayBadge').textContent = todayCount;
+        } else {
+          document.getElementById('todayBadge').style.display = 'none';
         }
 
-        applyFilter('all');
+        // 如果是从视频页返回的刷新，需要更新弹窗中的选中任务数据
+        if (isRefresh && state.selectedTask && state.selectedTask.id) {
+          const updatedTask = state.allTasks.find(t => t.id === state.selectedTask.id);
+          if (updatedTask) {
+            state.selectedTask = updatedTask;
+            // 如果任务已完成，关闭弹窗并显示全部任务
+            if (updatedTask.progress >= 100) {
+              closeActionModal();
+            }
+          } else if (state.allTasks.find(t => t.id === state.selectedTask.id) === undefined) {
+            // 如果原任务不在列表中（已完成），关闭弹窗
+            closeActionModal();
+          }
+        }
+
+        applyFilter(state.activeFilter);
       }).catch(err => {
         console.error('获取待完成任务失败:', err);
-        document.getElementById('tasksList').innerHTML = `
-          <div class="empty-state" style="display: flex;">
-            <div class="empty-icon">❌</div>
-            <text class="empty-title">加载失败</text>
-            <text class="empty-text">获取任务列表失败，请稍后重试</text>
-          </div>
-        `;
+        if (!isRefresh) {
+          document.getElementById('tasksList').innerHTML = `
+            <div class="empty-state" style="display: flex;">
+              <div class="empty-icon">❌</div>
+              <text class="empty-title">加载失败</text>
+              <text class="empty-text">获取任务列表失败，请稍后重试</text>
+            </div>
+          `;
+        }
       });
     }
 
@@ -933,45 +986,42 @@
         tasksList.style.display = 'flex';
         emptyState.style.display = 'none';
 
-        tasksList.innerHTML = state.filteredTasks.map((item, index) => `
-          <div class="task-item" data-index="${index}">
-            <div class="task-content">
-              <div class="task-header">
-                <text class="task-title">${item.title}</text>
-                <div class="task-badges">
-                  <text class="task-badge type">${item.type}</text>
-                  ${item.deadline ? `<text class="task-badge deadline">📅 ${item.deadline}</text>` : ''}
-                  ${item.className ? `<text class="task-badge class">${item.className}</text>` : ''}
+        tasksList.innerHTML = state.filteredTasks.map((item, index) => {
+          const isCompleted = item.progress >= 100;
+          const deadlineStr = item.deadline ? `📅 ${item.deadline}` : '';
+          
+          return `
+            <div class="task-item ${isCompleted ? 'completed' : ''}" data-index="${index}">
+              <div class="task-content">
+                <div class="task-header">
+                  <span class="task-title">${item.title}</span>
+                  <div class="task-badges">
+                    <span class="task-badge type">视频课程</span>
+                    ${deadlineStr ? `<span class="task-badge deadline">${deadlineStr}</span>` : ''}
+                  </div>
+                </div>
+                <div class="task-details">
+                  <div class="task-meta">
+                    <div class="meta-item">
+                      <span class="meta-icon">⏱️</span>
+                      <span class="meta-text">${formatDuration(item.videoDuration || item.duration)}</span>
+                    </div>
+                  </div>
+                  <div class="task-progress">
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: ${item.progress}%"></div>
+                    </div>
+                    <span class="progress-text">完成进度 ${item.progress}%</span>
+                  </div>
                 </div>
               </div>
-              
-              <div class="task-details">
-                <div class="task-meta">
-                  <div class="meta-item">
-                    <text class="meta-icon">⏱️</text>
-                    <text class="meta-text">${formatDuration(item.duration)}</text>
-                  </div>
-                  <div class="meta-item">
-                    <text class="meta-icon">👨‍🏫</text>
-                    <text class="meta-text">${item.teacherName}</text>
-                  </div>
-                </div>
-                
-                <div class="task-progress">
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${item.progress}%"></div>
-                  </div>
-                  <text class="progress-text">完成进度 ${item.progress}%</text>
-                </div>
+              <div class="task-status ${isCompleted ? 'completed' : 'pending'}">
+                <div class="status-indicator ${isCompleted ? 'completed' : ''}"></div>
+                <span class="status-text">${isCompleted ? '已完成' : '待完成'}</span>
               </div>
             </div>
-            
-            <div class="task-status pending">
-              <div class="status-indicator"></div>
-              <text class="status-text">待完成</text>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
         // 绑定点击事件
         tasksList.querySelectorAll('.task-item').forEach(item => {
@@ -986,67 +1036,93 @@
     // 点击任务卡片
     function onTaskTap(task) {
       state.selectedTask = task;
-      document.getElementById('modalTitle').textContent = task.title;
-      document.getElementById('className').textContent = task.className || '无';
-      document.getElementById('deadline').textContent = task.deadline || '无';
+      state.selectedTaskIndex = state.filteredTasks.indexOf(task);
 
-      // 更新按钮状态
-      const studyReportBtn = document.getElementById('studyReportBtn');
-      const studyReportDesc = document.getElementById('studyReportDesc');
-      const quizPracticeBtn = document.getElementById('quizPracticeBtn');
-      const quizPracticeDesc = document.getElementById('quizPracticeDesc');
+      modalTitleEl.textContent = task.title;
+      progressValueEl.textContent = task.progress + '%';
 
-      if (task.progress === 0) {
-        studyReportBtn.classList.add('disabled');
-        studyReportDesc.textContent = '暂无报告';
-        quizPracticeBtn.classList.add('disabled');
-        quizPracticeDesc.textContent = '观看视频解锁';
+      // 更新学情报告按钮状态（必须看完视频才能查看学情报告）
+      if (task.progress < 100) {
+        studyReportBtnEl.classList.add('disabled');
+        studyReportDescEl.textContent = '看完视频解锁';
       } else {
-        studyReportBtn.classList.remove('disabled');
-        studyReportDesc.textContent = '查看学习情况';
-        quizPracticeBtn.classList.remove('disabled');
-        quizPracticeDesc.textContent = '巩固薄弱点';
+        studyReportBtnEl.classList.remove('disabled');
+        studyReportDescEl.textContent = '查看学习情况';
       }
 
-      document.getElementById('actionModal').style.display = 'flex';
+      // 更新个性练习按钮状态（必须看完视频才能做练习）
+      if (task.progress < 100) {
+        quizPracticeBtnEl.classList.add('disabled');
+        quizPracticeDescEl.textContent = '看完视频解锁';
+      } else {
+        quizPracticeBtnEl.classList.remove('disabled');
+        quizPracticeDescEl.textContent = '巩固薄弱点';
+      }
+
+      // 更新视频总结按钮状态（必须看完视频才能查看）
+      if (task.progress < 100) {
+        videoSummaryBtnEl.classList.add('disabled');
+        videoSummaryDescEl.textContent = '看完视频解锁';
+      } else {
+        videoSummaryBtnEl.classList.remove('disabled');
+        videoSummaryDescEl.textContent = '查看视频总结';
+      }
+
+      // 显示进度信息
+      progressInfoEl.style.display = task.progress > 0 ? 'block' : 'none';
+
+      actionModalEl.classList.remove('hidden');
     }
 
     // 关闭操作弹窗
     function closeActionModal() {
-      document.getElementById('actionModal').style.display = 'none';
+      actionModalEl.classList.add('hidden');
     }
 
     // 跳转到视频播放页
     function goToVideoPlay() {
       const { selectedTask } = state;
       closeActionModal();
-      window.location.href = `video-play.html?courseId=${selectedTask.id}&courseTitle=${encodeURIComponent(selectedTask.title)}&classId=${selectedTask.classId}`;
+      window.location.href = `video-play.html?videoId=${selectedTask.id}&courseTitle=${encodeURIComponent(selectedTask.title)}&classId=${selectedTask.classId}`;
     }
 
     // 跳转到学情报告页面
     function goToStudyData() {
       const { selectedTask } = state;
 
-      if (!selectedTask.progress || selectedTask.progress === 0) {
-        alert('您尚未观看此课程，暂无学情报告。请先观看视频课程。');
+      if (selectedTask.progress < 100) {
+        alert('请先看完视频课程，解锁学情报告功能。');
         return;
       }
 
       closeActionModal();
-      window.location.href = `study-data.html?courseId=${selectedTask.id}&courseTitle=${encodeURIComponent(selectedTask.title)}&classId=${selectedTask.classId}&progress=${selectedTask.progress}`;
+      window.location.href = `study-data.html?videoId=${selectedTask.id}&courseTitle=${encodeURIComponent(selectedTask.title)}&classId=${selectedTask.classId}&progress=${selectedTask.progress}`;
     }
 
     // 跳转到个性练习页面
     function goToQuizPractice() {
       const { selectedTask } = state;
 
-      if (!selectedTask.progress || selectedTask.progress === 0) {
-        alert('请先观看视频课程，解锁个性练习功能。');
+      if (selectedTask.progress < 100) {
+        alert('请先看完视频课程，解锁个性练习功能。');
         return;
       }
 
       closeActionModal();
       window.location.href = `quiz-practice.html?videoId=${selectedTask.id}&videoTitle=${encodeURIComponent(selectedTask.title)}&classId=${selectedTask.classId}`;
+    }
+
+    // 跳转到视频总结页面
+    function goToVideoSummary() {
+      const { selectedTask } = state;
+
+      if (selectedTask.progress < 100) {
+        alert('请先看完视频课程，解锁视频总结功能。');
+        return;
+      }
+
+      closeActionModal();
+      window.location.href = `study-report.html?videoId=${selectedTask.id}&videoTitle=${encodeURIComponent(selectedTask.title)}&classId=${selectedTask.classId}`;
     }
 
     // 页面加载完成后初始化

@@ -465,32 +465,9 @@
   // DOM元素
   let classCountEl, classesGridEl, emptyStateEl, bottomNoticeEl, pendingCountEl, scrollContainerEl;
 
-  // API基础地址 - 与原小程序一致
-  const API_BASE = 'https://knowpals.xyz';
-
   // 封装请求方法 - 与原小程序request.js一致
   function requestGet(url) {
-    const token = localStorage.getItem('token') || '';
-    const fullUrl = API_BASE + url;
-    
-    console.log('========== 请求开始 ==========');
-    console.log('>>> URL:', fullUrl);
-    console.log('>>> Token:', token ? token.substring(0, 20) + '...' : '无Token');
-    console.log('================================');
-    
-    return fetch(fullUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      console.log('>>> 状态码:', res.status);
-      return res.json();
-    }).then(data => {
-      console.log('>>> 响应数据:', data);
-      return data;
-    });
+    return request.get(url);
   }
 
   // 初始化

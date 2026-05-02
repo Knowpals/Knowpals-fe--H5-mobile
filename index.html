@@ -384,9 +384,6 @@
 
   <script src="js/utils.js"></script>
   <script>
-    // ========== 全局配置 ==========
-    const API_BASE = 'https://knowpals.xyz';
-
     // ========== 状态 ==========
     const state = {
       isLoggedIn: false,
@@ -427,35 +424,6 @@
       return { greeting, dateStr };
     }
 
-    // ========== API 请求 ==========
-    async function fetchWithAuth(url, options = {}) {
-      const token = getToken();
-      if (!token) {
-        // 没有 token，跳转到登录页
-        window.location.href = 'pages/login.html';
-        return null;
-      }
-      
-      const res = await fetch(API_BASE + url, {
-        ...options,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          ...options.headers
-        }
-      });
-      
-      if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-        alert('登录已过期，请重新登录');
-        window.location.href = 'pages/login.html';
-        return null;
-      }
-      
-      return res.json();
-    }
-
     // ========== 加载数据 ==========
     async function loadData() {
       // 更新问候语
@@ -474,7 +442,7 @@
 
     async function loadClasses() {
       try {
-        const res = await fetchWithAuth('/api/v1/class/my-joined');
+        const res = await request.get('/api/v1/class/my-joined');
         console.log('>>> 班级列表:', res);
 
         if (res && (res.code === 0 || res.code === 200) && res.data && res.data.class_list) {
@@ -513,7 +481,7 @@
 
       // 为每个班级查询待预习数量
       const promises = state.classes.map(c => 
-        fetchWithAuth(`/api/v1/behavior/class-progress/${c.id}/todo`).then(res => {
+        request.get(`/api/v1/behavior/class-progress/${c.id}/todo`).then(res => {
           if (res && res.data && res.data.progress_list) {
             const list = res.data.progress_list;
             const pending = list.filter(item => (item.progress_percent || 0) < 100).length;
@@ -538,7 +506,7 @@
     async function loadStats() {
       // 从接口获取学习时长等统计数据
       try {
-        const res = await fetchWithAuth('/api/v1/stat/student/overview');
+        const res = await request.get('/api/v1/stat/student/overview');
         if (res && (res.code === 0 || res.code === 200) && res.data) {
           const data = res.data;
           // 转换观看时长（秒转为分钟）

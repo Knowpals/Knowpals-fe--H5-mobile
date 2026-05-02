@@ -253,10 +253,8 @@
     </div>
   </div>
 
+  <script src="../js/utils.js"></script>
   <script>
-    // ========== 全局配置 ==========
-    const API_BASE = 'https://knowpals.xyz';
-    
     // ========== 状态管理 ==========
     let videoId = null;
     let knowledgeId = null;
@@ -334,25 +332,7 @@
     }
     
     // ========== API 请求 ==========
-    async function fetchWithAuth(url, options = {}) {
-      const token = getToken();
-      const res = await fetch(API_BASE + url, {
-        ...options,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          ...options.headers
-        }
-      });
-      
-      if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-        return null;
-      }
-      
-      return res.json();
-    }
+    // 使用 utils.js 中的 request 对象
     
     // ========== 加载题目 ==========
     async function loadQuestions() {
@@ -383,10 +363,7 @@
         console.log('>>> 接口地址: POST /api/v1/agent/quiz');
         
         try {
-          const res = await fetchWithAuth('/api/v1/agent/quiz', {
-            method: 'POST',
-            body: JSON.stringify(params)
-          });
+          const res = await request.post('/api/v1/agent/quiz', params);
           
           console.log('>>> agent.generateQuiz 返回:', JSON.stringify(res, null, 2));
           
@@ -427,10 +404,7 @@
       console.log('>>> 接口地址: POST /api/v1/agent/quiz');
       
       try {
-        const res = await fetchWithAuth('/api/v1/agent/quiz', {
-          method: 'POST',
-          body: JSON.stringify(params)
-        });
+        const res = await request.post('/api/v1/agent/quiz', params);
         
         console.log('>>> agent.generateQuiz 返回:', JSON.stringify(res, null, 2));
         
@@ -734,10 +708,7 @@
       console.log('>>> 接口: POST /api/v1/agent/report');
       
       try {
-        const res = await fetchWithAuth('/api/v1/agent/report', {
-          method: 'POST',
-          body: JSON.stringify({ video_id: String(videoId) })
-        });
+        const res = await request.post('/api/v1/agent/report', { video_id: String(videoId) });
         
         console.log('>>> 生成学情报告返回:', JSON.stringify(res, null, 2));
         

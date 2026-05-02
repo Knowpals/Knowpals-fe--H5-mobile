@@ -834,9 +834,6 @@
 
   <script src="../js/utils.js"></script>
   <script>
-    // API 配置
-    const API_BASE = 'https://knowpals.xyz';
-
     // 状态管理
     const state = {
       aiOnline: true,
@@ -908,32 +905,12 @@
           return;
         }
 
-        // 构建查询参数 - GET请求需要将参数放在URL query string中
-        const params = new URLSearchParams({
+        // 调用聊天历史接口
+        const json = await request.get('/api/v1/agent/history', {
           video_id: String(state.videoId),
           limit: '20'
         });
-        const url = `${API_BASE}/api/v1/agent/history?${params.toString()}`;
 
-        console.log('>>> 加载聊天历史请求:', url);
-
-        const res = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        console.log('>>> 响应状态:', res.status);
-
-        if (!res.ok) {
-          console.error('>>> 请求失败，状态码:', res.status);
-          document.getElementById('quickQuestions').classList.add('show');
-          return;
-        }
-
-        const json = await res.json();
         console.log('>>> 加载聊天历史返回:', json);
 
         // 兼容多种返回格式
@@ -1085,16 +1062,7 @@
       console.log('>>> 发送 AI 聊天请求:', params);
 
       try {
-        const res = await fetch(API_BASE + '/api/v1/agent/chat', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(params)
-        });
-
-        const json = await res.json();
+        const json = await request.post('/api/v1/agent/chat', params);
         console.log('>>> AI 聊天接口返回:', json);
 
         // 移除加载状态

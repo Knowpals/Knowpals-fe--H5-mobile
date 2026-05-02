@@ -549,20 +549,11 @@
     </div>
   </div>
 
+  <script src="../js/utils.js"></script>
   <script>
-    // API基础地址
-    const API_BASE = 'https://knowpals.xyz';
-
     // 请求封装
     function requestGet(url) {
-      const token = localStorage.getItem('token') || '';
-      return fetch(API_BASE + url, {
-        method: 'GET',
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json'
-        }
-      }).then(res => res.json());
+      return request.get(url);
     }
 
     // 页面数据

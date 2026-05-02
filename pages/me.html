@@ -533,9 +533,6 @@
 
   <script src="../js/utils.js"></script>
   <script>
-    // API 配置
-    const API_BASE = 'https://knowpals.xyz';
-
     // 状态管理
     const state = {
       isLoggedIn: false,
@@ -589,10 +586,7 @@
         const token = getToken();
         if (!token) return;
         
-        const res = await fetch(API_BASE + '/api/v1/user/getUserInfo', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const json = await res.json();
+        const json = await request.get('/api/v1/user/getUserInfo');
         
         console.log('用户详细信息:', json);
         
@@ -676,10 +670,7 @@
         const token = getToken();
         if (!token) return;
         
-        const res = await fetch(API_BASE + '/api/v1/stat/student/overview', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const json = await res.json();
+        const json = await request.get('/api/v1/stat/student/overview');
         
         console.log('学习统计数据:', json);
         

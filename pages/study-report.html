@@ -27,9 +27,7 @@
     /* 总体评价 */
     .overall-section { margin: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; padding: 15px; box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3); }
     .overall-header { display: flex; align-items: center; margin-bottom: 10px; }
-    .overall-score-box { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; margin-right: 10px; }
-    .score-num { font-size: 28px; font-weight: 700; color: #fff; line-height: 1; }
-    .score-label { font-size: 11px; color: rgba(255,255,255,0.9); margin-top: 3px; }
+
     .overall-title { display: flex; align-items: center; }
     .title-icon { font-size: 18px; margin-right: 6px; }
     .title-text { font-size: 16px; font-weight: 600; color: #fff; }
@@ -90,10 +88,7 @@
     <!-- 总体评价 -->
     <div class="overall-section">
       <div class="overall-header">
-        <div class="overall-score-box">
-          <span class="score-num" id="overallScore">0</span>
-          <span class="score-label">综合得分</span>
-        </div>
+        
         <div class="overall-title">
           <span class="title-icon">📊</span>
           <span class="title-text">总体评价</span>
@@ -144,7 +139,7 @@
     </div>
   </div>
 
-  <script src="../../js/utils.js"></script>
+  <script src="../js/utils.js"></script>
   <script>
     // 页面状态
     const state = {
@@ -183,32 +178,11 @@
     }
 
     // ========== API 请求 ==========
-    const API_BASE = 'https://knowpals.xyz';
     
     function getToken() {
       return localStorage.getItem('token');
     }
     
-    async function fetchWithAuth(url, options = {}) {
-      const token = getToken();
-      const res = await fetch(API_BASE + url, {
-        ...options,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          ...options.headers
-        }
-      });
-      
-      if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-        return null;
-      }
-      
-      return res.json();
-    }
-
     // 加载学情报告
     async function loadStudyReport() {
       // 如果没有videoId，尝试从存储中获取
@@ -226,7 +200,7 @@
 
       try {
         // 先尝试获取已存储的报告
-        const res = await fetchWithAuth('/api/v1/agent/report?video_id=' + state.videoId);
+        const res = await request.get('/api/v1/agent/report', { video_id: state.videoId });
         console.log('>>> getReport 返回:', JSON.stringify(res, null, 2));
         
         if (res.code === 200 && res.data) {
@@ -255,12 +229,9 @@
       showLoading('正在生成学情报告...');
 
       try {
-        const res = await fetchWithAuth('/api/v1/agent/report', {
-          method: 'POST',
-          body: JSON.stringify({
-            video_id: state.videoId,
-            force_regen: false
-          })
+        const res = await request.post('/api/v1/agent/report', {
+          video_id: state.videoId,
+          force_regen: false
         });
         
         console.log('>>> 生成学情报告返回:', JSON.stringify(res, null, 2));
@@ -300,13 +271,10 @@
         };
       });
 
-      const overallScore = itemCount > 0 ? Math.round(totalMastery / itemCount) : 85;
-
       // 筛选薄弱点
       state.weakPoints = state.knowledgeItems.filter(item => (item.mastery || 0) < 70);
 
       // 更新UI
-      document.getElementById('overallScore').textContent = overallScore;
       document.getElementById('overallSummary').textContent = data.overall_summary || '整体掌握良好，建议针对薄弱环节进行强化练习';
       document.getElementById('knowledgeCount').textContent = state.knowledgeItems.length;
       document.getElementById('weakPointsCount').textContent = state.weakPoints.length;
@@ -316,7 +284,6 @@
     // Mock 数据
     function loadMockData() {
       const mockData = {
-        overallScore: 78,
         overallSummary: '整体掌握良好，但在勾股定理应用方面还需加强练习。建议重点复习勾股定理的实际应用场景。',
         items: [
           {
