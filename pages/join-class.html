@@ -240,11 +240,6 @@
 
     // 初始化
     document.addEventListener('DOMContentLoaded', function() {
-      // 返回按钮
-      document.getElementById('navBack').addEventListener('click', function() {
-        window.history.back();
-      });
-
       // 输入监听
       document.getElementById('classCodeInput').addEventListener('input', function(e) {
         state.classCode = e.target.value;

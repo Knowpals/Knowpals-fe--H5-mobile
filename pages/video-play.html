@@ -2149,23 +2149,14 @@
       
       // 如果有播放记录，先查询学情确认状态，再决定是否上传
       if (video.currentTime > 0) {
-        // 先检查本地缓存
-        const completedVideos = JSON.parse(localStorage.getItem('completed_videos') || '[]');
-        const vid = parseInt(videoId);
-        
         // 查询学情检查状态
         fetchWithAuth(`/api/v1/stat/student/${videoId}`)
           .then(statRes => {
             const status = statRes?.data?.status;
             if (status === 'finished') {
               console.log('>>> 返回时接口标记已完成（status=finished），跳过上传进度');
-              // 同步本地缓存
-              if (!completedVideos.includes(vid)) {
-                completedVideos.push(vid);
-                localStorage.setItem('completed_videos', JSON.stringify(completedVideos));
-              }
             } else {
-              console.log('>>> 返回时接口标记未完成，上传进度');
+              console.log('>>> 返回时接口标记未完成（status=todo），上传进度');
               const currentSec = Math.floor(video.currentTime);
               fetchWithAuth('/api/v1/behavior/update-progress', {
                 method: 'POST',
@@ -2272,34 +2263,24 @@
       questionStartTime = Date.now();
     }
     
-    // 上传学习记录（带本地缓存检查）
+    // 上传学习记录（根据接口status决定是否上传）
     async function uploadStudyRecord() {
       const record = state.studyRecord;
       if (!record.videoId) return;
-      
-      // 先检查本地缓存，如果已完成则跳过上传
-      const completedVideos = JSON.parse(localStorage.getItem('completed_videos') || '[]');
-      const videoId = parseInt(record.videoId);
-      if (completedVideos.includes(videoId)) {
-        console.log('>>> 视频已完成（本地缓存），跳过上传进度');
-        return;
-      }
       
       try {
         // 查询学情，检查视频状态
         const statRes = await fetchWithAuth(`/api/v1/stat/student/${record.videoId}`);
         const status = statRes?.data?.status;
+        
+        // 如果status是finished，跳过上传进度
         if (status === 'finished') {
           console.log('>>> 视频已完成（status=finished），跳过上传进度');
-          // 标记到本地缓存
-          if (!completedVideos.includes(videoId)) {
-            completedVideos.push(videoId);
-            localStorage.setItem('completed_videos', JSON.stringify(completedVideos));
-          }
           return;
         }
         
-        // 未完成，上传进度 - fire-and-forget 模式
+        // status是todo，上传进度 - fire-and-forget 模式
+        console.log('>>> 视频未完成（status=todo），上传进度');
         const videoTimeMs = state.currentTime;
         fetchWithAuth('/api/v1/behavior/update-progress', {
           method: 'POST',
@@ -2328,27 +2309,19 @@
       if (!videoId) return;
       
       try {
-        // 先检查本地缓存
-        const completedVideos = JSON.parse(localStorage.getItem('completed_videos') || '[]');
-        const vid = parseInt(videoId);
-        if (completedVideos.includes(vid)) {
-          console.log('>>> 视频已完成（本地缓存），跳过上传进度');
+        // 查询学情，检查视频状态
+        const statRes = await fetchWithAuth(`/api/v1/stat/student/${videoId}`);
+        const status = statRes?.data?.status;
+        
+        // 如果status是finished，不需要上传进度
+        if (status === 'finished') {
+          console.log('>>> 视频已完成（status=finished），跳过上传进度');
           loadStudyReport();
           return;
         }
         
-        // 查询学情
-        const statRes = await fetchWithAuth(`/api/v1/stat/student/${videoId}`);
-        const status = statRes?.data?.status;
-        if (status === 'finished') {
-          console.log('>>> 视频已完成（status=finished）');
-          if (!completedVideos.includes(vid)) {
-            completedVideos.push(vid);
-            localStorage.setItem('completed_videos', JSON.stringify(completedVideos));
-          }
-        }
-        
-        // 上传完成进度 - 使用 fire-and-forget 模式，不阻塞流程
+        // status是todo，上传完成进度
+        console.log('>>> 视频未完成（status=todo），上传完成进度');
         fetchWithAuth('/api/v1/behavior/update-progress', {
           method: 'POST',
           body: {
@@ -2358,12 +2331,6 @@
         }).catch(err => {
           console.warn('>>> 上传进度失败（不影响流程）:', err);
         });
-        
-        // 标记为已完成
-        if (!completedVideos.includes(vid)) {
-          completedVideos.push(vid);
-          localStorage.setItem('completed_videos', JSON.stringify(completedVideos));
-        }
       } catch (err) {
         console.error('>>> 结束上传失败:', err);
       }
