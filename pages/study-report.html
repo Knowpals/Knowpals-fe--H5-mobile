@@ -168,7 +168,6 @@
 
     // 绑定事件
     function bindEvents() {
-      document.getElementById('backBtn').addEventListener('click', goBack);
       document.getElementById('regenerateBtn').addEventListener('click', regenerateReport);
       document.getElementById('backVideoBtn').addEventListener('click', backToVideo);
     }
@@ -196,7 +195,7 @@
 
       try {
         // 先尝试获取已存储的报告
-        const res = await request.get('/api/v1/agent/report', { video_id: state.videoId });
+        const res = await request.get('/api/v1/agent/report?video_id=' + state.videoId);
         console.log('>>> getReport 返回:', JSON.stringify(res, null, 2));
         
         if (res.code === 200 && res.data) {
